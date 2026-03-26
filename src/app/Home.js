@@ -26,6 +26,7 @@ import CategorySlider from "../components/CategorySlider"
 import TrendingDealsSection from "../components/TrendingDealsSection"
 import FilterChips from "../components/FilterChips"
 
+
 export default function Home() {
 
 const router = useRouter()
@@ -49,7 +50,7 @@ const [success, setSuccess] = useState(false)
 const [toastText, setToastText] = useState("")
 const [activeTask, setActiveTask] = useState(null)
 const [postedTaskId, setPostedTaskId] = useState(null)
-
+const [activeFilter, setActiveFilter] = useState("All")
 /* NEW: confirm modal state */
 const [confirmTask, setConfirmTask] = useState(null)
 
@@ -369,7 +370,10 @@ navigator.geolocation.getCurrentPosition(async (pos)=>{
 <HomePromoCarousel userCity={city || ""} />
     <ActivityTicker />
    <CategorySlider /> 
-      <FilterChips />
+      <FilterChips 
+  active={activeFilter} 
+  setActive={setActiveFilter} 
+/>
   <TrendingDealsSection />
       
     {role === "user" && !activeTask && (
