@@ -383,3 +383,123 @@ body {
 .animate-fill {
   animation: fillBar 5s linear forwards;
   }
+
+/* ================= 🔥 SECTION WRAPPER ================= */
+.section {
+  padding: 20px 16px;
+}
+
+.section-title {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 14px;
+  color: #ffffff;
+  letter-spacing: 0.3px;
+}
+
+/* ================= 🔥 SLIDER ================= */
+.slider-container {
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+}
+
+.slider {
+  display: flex;
+  gap: 14px;
+  padding-bottom: 4px;
+}
+
+/* ================= 🔥 CARD ================= */
+.card {
+  min-width: 240px;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 18px;
+  overflow: hidden;
+  scroll-snap-align: start;
+
+  backdrop-filter: blur(10px);
+
+  box-shadow: 
+    0 6px 18px rgba(0, 0, 0, 0.12),
+    0 2px 6px rgba(0, 0, 0, 0.06);
+
+  transition: 
+    transform 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+/* 🔥 HOVER (mobile still feels it slightly) */
+.card:hover {
+  transform: translateY(-4px) scale(1.04);
+  box-shadow: 
+    0 12px 28px rgba(0, 0, 0, 0.18),
+    0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* ================= 🔥 IMAGE ================= */
+.card img {
+  width: 100%;
+  height: 150px;
+  object-fit: cover;
+}
+
+/* 🔥 IMAGE OVERLAY (ZOMATO STYLE) */
+.card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.4), transparent);
+  pointer-events: none;
+}
+
+/* ================= 🔥 CARD CONTENT ================= */
+.card-info {
+  padding: 12px;
+}
+
+.card-info h3 {
+  font-size: 15px;
+  font-weight: 600;
+  margin: 0;
+  color: #111;
+}
+
+.card-info p {
+  font-size: 12px;
+  color: #666;
+  margin-top: 4px;
+}
+
+/* ================= 🔥 SCROLLBAR REMOVE ================= */
+.slider-container::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* ================= 🔥 OPTIONAL BADGE ================= */
+.card-badge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: linear-gradient(135deg, #ff4d4d, #ff7a00);
+  color: #fff;
+  font-size: 11px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-weight: 600;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+}
+
+/* ================= 🔥 TOUCH FEEDBACK ================= */
+.card:active {
+  transform: scale(0.97);
+    }
