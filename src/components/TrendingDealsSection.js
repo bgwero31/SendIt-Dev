@@ -1,10 +1,13 @@
 'use client'
 
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
+import { ref, onValue } from "firebase/database"
+import { db } from "../lib/firebase"
 
 export default function TrendingDealsSection() {
 
-  const deals = [
+  /* 🔥 STATIC FALLBACK (KEEPED) */
+  const staticDeals = [
     {
       title: "Burger Combo",
       desc: "50% OFF • Fast delivery",
@@ -27,25 +30,48 @@ export default function TrendingDealsSection() {
     }
   ]
 
+  /* 🔥 STATE */
+  const [deals, setDeals] = useState(staticDeals)
+  const [loading, setLoading] = useState(true)
+
+  const sliderRef = useRef(null)
+
+  /* 🔥 FETCH FROM FIREBASE (ADDED) */
   useEffect(() => {
-  const slider = sliderRef.current
-  if (!slider) return
+    const dealsRef = ref(db, "deals")
 
-  let scrollAmount = 0
+    return onValue(dealsRef, snap => {
+      const data = snap.val()
 
-  const interval = setInterval(() => {
-    slider.scrollBy({ left: 250, behavior: "smooth" })
-    scrollAmount += 250
+      if (data) {
+        const list = Object.values(data)
+        setDeals(list)
+      }
 
-    if (scrollAmount >= slider.scrollWidth - slider.clientWidth) {
-      slider.scrollTo({ left: 0, behavior: "smooth" })
-      scrollAmount = 0
-    }
-  }, 3500)
+      setLoading(false)
+    })
+  }, [])
 
-  return () => clearInterval(interval)
-}, [])
-  
+  /* 🔥 AUTO SCROLL (FIXED WITH REF) */
+  useEffect(() => {
+    const slider = sliderRef.current
+    if (!slider) return
+
+    let scrollAmount = 0
+
+    const interval = setInterval(() => {
+      slider.scrollBy({ left: 250, behavior: "smooth" })
+      scrollAmount += 250
+
+      if (scrollAmount >= slider.scrollWidth - slider.clientWidth) {
+        slider.scrollTo({ left: 0, behavior: "smooth" })
+        scrollAmount = 0
+      }
+    }, 3500)
+
+    return () => clearInterval(interval)
+  }, [])
+
   return (
     <div className="px-4 mt-6">
 
@@ -54,37 +80,44 @@ export default function TrendingDealsSection() {
         🔥 Trending Deals
       </h2>
 
-      {/* 🔥 SLIDER */}
-<div
-  ref={sliderRef}
-  className="flex gap-4 overflow-x-auto no-scrollbar snap-x snap-mandatory"
->
+      {/* 🔥 LOADING STATE */}
+      {loading ? (
+        <p className="text-gray-400 text-sm">Loading deals...</p>
+      ) : (
 
-        {deals.map((deal, i) => (
+        /* 🔥 SLIDER */
+        <div
+          ref={sliderRef}
+          className="flex gap-4 overflow-x-auto no-scrollbar snap-x snap-mandatory"
+        >
 
-          <div
-            key={i}
-            className="min-w-[220px] bg-white rounded-2xl shadow-md overflow-hidden snap-start hover:scale-[1.03] transition"
-          >
+          {deals.map((deal, i) => (
 
-            {/* IMAGE */}
-            <img
-              src={deal.img}
-              className="w-full h-[130px] object-cover"
-            />
+            <div
+              key={i}
+              className="min-w-[220px] bg-white rounded-2xl shadow-md overflow-hidden snap-start hover:scale-[1.03] transition"
+            >
 
-            {/* INFO */}
-            <div className="p-3">
-              <h3 className="text-sm font-semibold">{deal.title}</h3>
-              <p className="text-xs text-gray-500">{deal.desc}</p>
+              {/* IMAGE */}
+              <img
+                src={deal.img}
+                className="w-full h-[130px] object-cover"
+              />
+
+              {/* INFO */}
+              <div className="p-3">
+                <h3 className="text-sm font-semibold">{deal.title}</h3>
+                <p className="text-xs text-gray-500">{deal.desc}</p>
+              </div>
+
             </div>
 
-          </div>
+          ))}
 
-        ))}
+        </div>
 
-      </div>
+      )}
 
     </div>
   )
-}
+          }
