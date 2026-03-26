@@ -28,7 +28,8 @@ import FilterChips from "../components/FilterChips"
 
 
 export default function Home() {
-
+export default function TrendingDealsSection({ filter }) {
+  
 const router = useRouter()
 
 /* ================= GLOBAL CITY ================= */
@@ -374,8 +375,8 @@ navigator.geolocation.getCurrentPosition(async (pos)=>{
   active={activeFilter} 
   setActive={setActiveFilter} 
 />
-  <TrendingDealsSection />
-      
+<TrendingDealsSection filter={activeFilter} />
+    
     {role === "user" && !activeTask && (
       <div className="px-6 mt-6">
         <button
