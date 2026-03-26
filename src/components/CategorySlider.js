@@ -7,11 +7,11 @@ export default function CategorySlider() {
   const sliderRef = useRef(null)
 
   const categories = [
-    { name: "Pizza", img: "https://images.unsplash.com/photo-1601924638867-3ec3c0b7c2d2" },
-    { name: "Burger", img: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd" },
-    { name: "Rolls", img: "https://images.unsplash.com/photo-1604908176997-4319bda1b1f3" },
-    { name: "Chicken", img: "https://images.unsplash.com/photo-1606755962773-d324e0a13086" },
-    { name: "Snacks", img: "https://images.unsplash.com/photo-1599490659213-e2b9527bd087" }
+    { name: "Pizza", img: "https://source.unsplash.com/200x200/?pizza" },
+    { name: "Burger", img: "https://source.unsplash.com/200x200/?burger" },
+    { name: "Rolls", img: "https://source.unsplash.com/200x200/?wrap" },
+    { name: "Chicken", img: "https://source.unsplash.com/200x200/?fried-chicken" },
+    { name: "Snacks", img: "https://source.unsplash.com/200x200/?snacks" }
   ]
 
   return (
@@ -19,8 +19,11 @@ export default function CategorySlider() {
 
       <div className="relative">
 
-        {/* 🔥 STATIC CARD (LIKE ₹250) */}
-        <div className="absolute left-0 top-0 z-10">
+        {/* 🔥 MASK (THIS FIXES TEXT SHOWING BEHIND) */}
+        <div className="absolute left-0 top-0 h-full w-[85px] bg-gradient-to-r from-[#11183a] to-transparent z-10" />
+
+        {/* 🔥 STATIC CARD */}
+        <div className="absolute left-0 top-0 z-20">
 
           <div className="flex flex-col items-center w-[75px]">
 
@@ -39,20 +42,21 @@ export default function CategorySlider() {
         {/* 🔥 SLIDER */}
         <div
           ref={sliderRef}
-          className="flex gap-4 overflow-x-auto no-scrollbar pl-[90px]"
+          className="flex gap-3 overflow-x-auto no-scrollbar pl-[90px]"
         >
 
           {categories.map((cat, i) => (
 
             <div
               key={i}
-              className="flex flex-col items-center min-w-[70px] cursor-pointer active:scale-95 transition"
+              className="flex flex-col items-center min-w-[65px] cursor-pointer active:scale-95 transition"
             >
 
-              {/* 🔥 IMAGE (REAL FOOD, NO CARTOON) */}
-              <div className="w-[60px] h-[60px] rounded-full overflow-hidden bg-white/10">
+              {/* 🔥 IMAGE */}
+              <div className="w-[58px] h-[58px] rounded-full overflow-hidden bg-gray-200">
                 <img
                   src={cat.img}
+                  onError={(e) => e.target.src = "https://via.placeholder.com/200"}
                   className="w-full h-full object-cover"
                 />
               </div>
