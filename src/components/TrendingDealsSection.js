@@ -89,7 +89,30 @@ export default function TrendingDealsSection() {
           className="flex gap-3 overflow-x-auto no-scrollbar snap-x snap-mandatory"
         >
 
-          {deals.map((deal, i) => (
+          {deals
+  .filter(deal => {
+
+    if (filter === "All") return true
+
+    if (filter === "Under $5") {
+      return deal.price <= 5
+    }
+
+    if (filter === "Near & Fast") {
+      return deal.fast === true
+    }
+
+    if (filter === "Top Rated") {
+      return deal.rating >= 4.5
+    }
+
+    if (filter === "Popular") {
+      return deal.popular === true
+    }
+
+    return true
+  })
+  .map((deal, i) => (
 
             <div
               key={i}
