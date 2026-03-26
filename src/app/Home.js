@@ -365,7 +365,8 @@ navigator.geolocation.getCurrentPosition(async (pos)=>{
 
 <HomePromoCarousel userCity={city || ""} />
     <ActivityTicker />
-
+ <TrendingDealsSection />
+      
     {role === "user" && !activeTask && (
       <div className="px-6 mt-6">
         <button
