@@ -39,19 +39,19 @@ export default function CategorySlider() {
 
       <div className="relative">
 
-        {/* 🔥 LEFT FADE MASK */}
-        <div className="absolute left-0 top-0 h-full w-[70px] bg-gradient-to-r from-[#11183a] to-transparent z-10" />
+        {/* 🔥 LEFT FADE */}
+        <div className="absolute left-0 top-0 h-full w-[80px] bg-gradient-to-r from-[#11183a] to-transparent z-10" />
 
         {/* 🔥 STATIC CARD */}
         <div className="absolute left-0 top-0 z-20">
 
-          <div className="flex flex-col items-center w-[65px]">
+          <div className="flex flex-col items-center w-[75px]">
 
-            <div className="w-[65px] h-[65px] rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-[10px] font-semibold shadow-md">
+            <div className="w-[65px] h-[65px] rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-[11px] font-semibold shadow-lg">
               UNDER<br/>$5
             </div>
 
-            <p className="text-[10px] text-white mt-1 text-center">
+            <p className="text-[11px] text-white mt-1 text-center">
               Explore
             </p>
 
@@ -62,27 +62,27 @@ export default function CategorySlider() {
         {/* 🔥 SLIDER */}
         <div
           ref={sliderRef}
-          className="flex gap-2 overflow-x-auto no-scrollbar pl-[75px]"
+          className="flex gap-4 overflow-x-auto no-scrollbar pl-[95px]"
         >
 
           {categories.map((cat, i) => (
 
             <div
               key={i}
-              className="flex flex-col items-center min-w-[55px] cursor-pointer active:scale-95 transition"
+              className="flex flex-col items-center min-w-[72px] cursor-pointer active:scale-95 transition"
             >
 
-              {/* 🔥 FLOATING IMAGE (NO BACKGROUND) */}
-              <div className="w-[42px] h-[42px] flex items-center justify-center">
+              {/* 🔥 PERFECT SIZE ICON */}
+              <div className="w-[56px] h-[56px] flex items-center justify-center">
                 <img
                   src={cat.img}
                   onError={(e) => (e.currentTarget.src = cat.fallback)}
-                  className="w-[42px] h-[42px] object-contain drop-shadow-md"
+                  className="w-[50px] h-[50px] object-contain drop-shadow-lg"
                 />
               </div>
 
               {/* 🔥 TEXT */}
-              <p className="text-[10px] text-white mt-[2px] text-center leading-tight">
+              <p className="text-[11px] text-white mt-[4px] text-center leading-tight">
                 {cat.name}
               </p>
 
