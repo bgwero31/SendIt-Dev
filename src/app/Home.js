@@ -28,8 +28,7 @@ import FilterChips from "../components/FilterChips"
 
 
 export default function Home() {
-export default function TrendingDealsSection({ filter }) {
-  
+
 const router = useRouter()
 
 /* ================= GLOBAL CITY ================= */
