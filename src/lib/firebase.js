@@ -1,29 +1,28 @@
 import { initializeApp, getApps } from "firebase/app"
 import { getDatabase } from "firebase/database"
 import { getAuth } from "firebase/auth"
-import { getMessaging, isSupported } from "firebase/messaging"
 
 /*
-  🧠 Realtime Database only
-  No Firestore anywhere in the project
+  🧠 Using NEW Firebase project (jetx-predictor)
+  Realtime Database only
 */
 
 const firebaseConfig = {
-  apiKey: "AIzaSyD7K7snV0HJfnW7PDZdlRjBc70Wq5uvPv0",
-  authDomain: "sendit-16cbe.firebaseapp.com",
-  databaseURL: "https://sendit-16cbe-default-rtdb.firebaseio.com",
-  projectId: "sendit-16cbe",
-  storageBucket: "sendit-16cbe.appspot.com",
-  messagingSenderId: "594550385469",
-  appId: "1:594550385469:web:0d287f28af74249c8ef354"
+  apiKey: "AIzaSyB7BV6jQf1QAgrihNIWIo0Yf1BnJIOPVKg",
+  authDomain: "jetx-predictor-8deac.firebaseapp.com",
+  databaseURL: "https://jetx-predictor-8deac-default-rtdb.firebaseio.com",
+  projectId: "jetx-predictor-8deac",
+  storageBucket: "jetx-predictor-8deac.firebasestorage.app",
+  messagingSenderId: "696880972185",
+  appId: "1:696880972185:web:d2c466d3038c50932b9308"
 }
 
 /*
-  🔥 Prevents Next.js hot-reload double initialization crashes
+  🔥 Prevent multiple initialization (Next.js safe)
 */
-const app = getApps().length
-  ? getApps()[0]
-  : initializeApp(firebaseConfig)
+const app = !getApps().length
+  ? initializeApp(firebaseConfig)
+  : getApps()[0]
 
 export { app }
 
@@ -32,11 +31,3 @@ export const db = getDatabase(app)
 
 /* ✅ Authentication */
 export const auth = getAuth(app)
-
-/* ✅ Messaging (only if supported) */
-export const messaging = async () => {
-  if (await isSupported()) {
-    return getMessaging(app)
-  }
-  return null
-}
