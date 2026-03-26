@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.sendit.africa",
+      "sha256_cert_fingerprints": [
+        "73:A2:FE:93:4F:53:2D:40:9D:7E:5E:3A:6A:3A:0C:9F:47:5D:55:5C:5E:89:6B:5A:63:41:7A:34:5A:5E:4C:7F"
+      ]
+    }
+  }
+]
