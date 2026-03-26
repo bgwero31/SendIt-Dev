@@ -24,6 +24,7 @@ import HomePromoCarousel from "../components/HomePromoCarousel"
 import ActivityTicker from "../components/ActivityTicker"
 import CategorySlider from "../components/CategorySlider"
 import TrendingDealsSection from "../components/TrendingDealsSection"
+import FilterChips from "../components/FilterChips"
 
 export default function Home() {
 
@@ -367,7 +368,8 @@ navigator.geolocation.getCurrentPosition(async (pos)=>{
 
 <HomePromoCarousel userCity={city || ""} />
     <ActivityTicker />
-   <CategorySlider />      
+   <CategorySlider /> 
+      <FilterChips />
   <TrendingDealsSection />
       
     {role === "user" && !activeTask && (
