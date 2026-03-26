@@ -518,3 +518,7 @@ body {
   background-size: 400% 100%;
   animation: shimmer 1.4s infinite;
 }
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
