@@ -27,6 +27,25 @@ export default function TrendingDealsSection() {
     }
   ]
 
+  useEffect(() => {
+  const slider = sliderRef.current
+  if (!slider) return
+
+  let scrollAmount = 0
+
+  const interval = setInterval(() => {
+    slider.scrollBy({ left: 250, behavior: "smooth" })
+    scrollAmount += 250
+
+    if (scrollAmount >= slider.scrollWidth - slider.clientWidth) {
+      slider.scrollTo({ left: 0, behavior: "smooth" })
+      scrollAmount = 0
+    }
+  }, 3500)
+
+  return () => clearInterval(interval)
+}, [])
+  
   return (
     <div className="px-4 mt-6">
 
@@ -36,7 +55,10 @@ export default function TrendingDealsSection() {
       </h2>
 
       {/* 🔥 SLIDER */}
-      <div className="flex gap-4 overflow-x-auto no-scrollbar snap-x snap-mandatory">
+<div
+  ref={sliderRef}
+  className="flex gap-4 overflow-x-auto no-scrollbar snap-x snap-mandatory"
+>
 
         {deals.map((deal, i) => (
 
