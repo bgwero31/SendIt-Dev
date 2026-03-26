@@ -368,21 +368,33 @@ navigator.geolocation.getCurrentPosition(async (pos)=>{
     />
 
 <HomePromoCarousel userCity={city || ""} />
-    <ActivityTicker />
-   <CategorySlider /> 
-      <FilterChips 
-  active={activeFilter} 
-  setActive={setActiveFilter} 
-/>
-<TrendingDealsSection filter={activeFilter} />
+
+<div className="mt-1">
+  <ActivityTicker />
+</div>
+
+<div className="mt-1">
+  <CategorySlider />
+</div>
+
+<div className="mt-2">
+  <FilterChips 
+    active={activeFilter} 
+    setActive={setActiveFilter} 
+  />
+</div>
+
+<div className="mt-2">
+  <TrendingDealsSection filter={activeFilter} />
+</div>
     
     {role === "user" && !activeTask && (
-      <div className="px-6 mt-6">
+      <div className="px-4 mt-4">
         <button
           onClick={() => setOpen(true)}
           disabled={!city}
-          className="w-full bg-indigo-600 text-white py-4 rounded-2xl font-semibold shadow-xl"
-        >
+          className="w-full bg-indigo-600 text-white py-3 rounded-xl text-[14px] font-medium shadow-lg active:scale-95 transition"
+            
           + Post Task
         </button>
       </div>
