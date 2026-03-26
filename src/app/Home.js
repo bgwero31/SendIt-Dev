@@ -394,6 +394,7 @@ navigator.geolocation.getCurrentPosition(async (pos)=>{
           onClick={() => setOpen(true)}
           disabled={!city}
           className="w-full bg-indigo-600 text-white py-3 rounded-xl text-[14px] font-medium shadow-lg active:scale-95 transition"
+           >
             
           + Post Task
         </button>
