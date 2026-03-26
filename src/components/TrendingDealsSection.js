@@ -6,7 +6,7 @@ import { db } from "../lib/firebase"
 
 export default function TrendingDealsSection() {
 
-  /* 🔥 STATIC FALLBACK (KEEPED) */
+  /* 🔥 STATIC FALLBACK */
   const staticDeals = [
     {
       title: "Burger Combo",
@@ -36,7 +36,7 @@ export default function TrendingDealsSection() {
 
   const sliderRef = useRef(null)
 
-  /* 🔥 FETCH FROM FIREBASE (ADDED) */
+  /* 🔥 FETCH FROM FIREBASE */
   useEffect(() => {
     const dealsRef = ref(db, "deals")
 
@@ -52,7 +52,7 @@ export default function TrendingDealsSection() {
     })
   }, [])
 
-  /* 🔥 AUTO SCROLL (FIXED WITH REF) */
+  /* 🔥 AUTO SCROLL (SMOOTHER + SMALLER STEP) */
   useEffect(() => {
     const slider = sliderRef.current
     if (!slider) return
@@ -60,8 +60,8 @@ export default function TrendingDealsSection() {
     let scrollAmount = 0
 
     const interval = setInterval(() => {
-      slider.scrollBy({ left: 250, behavior: "smooth" })
-      scrollAmount += 250
+      slider.scrollBy({ left: 160, behavior: "smooth" })
+      scrollAmount += 160
 
       if (scrollAmount >= slider.scrollWidth - slider.clientWidth) {
         slider.scrollTo({ left: 0, behavior: "smooth" })
@@ -75,17 +75,15 @@ export default function TrendingDealsSection() {
   return (
     <div className="px-4 mt-6">
 
-      {/* 🔥 SECTION TITLE */}
+      {/* 🔥 TITLE */}
       <h2 className="text-lg font-semibold mb-3 text-white">
         🔥 Trending Deals
       </h2>
 
-      {/* 🔥 LOADING STATE */}
       {loading ? (
         <p className="text-gray-400 text-sm">Loading deals...</p>
       ) : (
 
-        /* 🔥 SLIDER */
         <div
           ref={sliderRef}
           className="flex gap-4 overflow-x-auto no-scrollbar snap-x snap-mandatory"
@@ -95,19 +93,25 @@ export default function TrendingDealsSection() {
 
             <div
               key={i}
-              className="min-w-[220px] bg-white rounded-2xl shadow-md overflow-hidden snap-start hover:scale-[1.03] transition"
+              className="min-w-[140px] flex flex-col snap-start cursor-pointer active:scale-95 transition"
             >
 
-              {/* IMAGE */}
-              <img
-                src={deal.img}
-                className="w-full h-[130px] object-cover"
-              />
+              {/* 🔥 IMAGE (SMALL + CLEAN) */}
+              <div className="w-[140px] h-[100px] rounded-xl overflow-hidden">
+                <img
+                  src={deal.img}
+                  className="w-full h-full object-cover"
+                />
+              </div>
 
-              {/* INFO */}
-              <div className="p-3">
-                <h3 className="text-sm font-semibold">{deal.title}</h3>
-                <p className="text-xs text-gray-500">{deal.desc}</p>
+              {/* 🔥 TEXT */}
+              <div className="mt-2">
+                <h3 className="text-sm font-semibold text-white leading-tight">
+                  {deal.title}
+                </h3>
+                <p className="text-xs text-gray-300">
+                  {deal.desc}
+                </p>
               </div>
 
             </div>
@@ -120,4 +124,4 @@ export default function TrendingDealsSection() {
 
     </div>
   )
-          }
+}
