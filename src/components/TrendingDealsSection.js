@@ -60,6 +60,11 @@ export default function TrendingDealsSection({ filter }) {
     if (!deals) return
 
     setAnimating(true)
+setLoading(true)
+
+setTimeout(() => {
+  setLoading(false)
+}, 600)
 
     const timeout = setTimeout(() => {
 
@@ -79,7 +84,7 @@ export default function TrendingDealsSection({ filter }) {
 
       setAnimating(false)
 
-    }, 400) // 🔥 slightly longer for shimmer visibility
+    }, 700) // 🔥 slightly longer for shimmer visibility
 
     return () => clearTimeout(timeout)
 
