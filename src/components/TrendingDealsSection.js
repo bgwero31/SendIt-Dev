@@ -4,8 +4,8 @@ import { useEffect, useRef, useState } from "react"
 import { ref, onValue } from "firebase/database"
 import { db } from "../lib/firebase"
 
-export default function TrendingDealsSection() {
-
+export default function TrendingDealsSection({ filter }) {
+  
   /* 🔥 STATIC FALLBACK */
   const staticDeals = [
     {
