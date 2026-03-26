@@ -22,6 +22,7 @@ import CityPicker from "../components/CityPicker"
 import CreditsBadge from "../components/CreditsBadge"
 import HomePromoCarousel from "../components/HomePromoCarousel"
 import ActivityTicker from "../components/ActivityTicker"
+import TrendingDealsSection from "../components/TrendingDealsSection"
 
 export default function Home() {
 
