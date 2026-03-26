@@ -127,11 +127,12 @@ export default function TrendingDealsSection({ filter }) {
             Array.from({ length: 5 }).map((_, i) => (
               <div key={i} className="min-w-[120px]">
 
-                <div className="w-[120px] h-[85px] rounded-lg shimmer" />
+                <div className="w-[120px] h-[85px] rounded-xl shimmer bg-white/10 backdrop-blur-md border border-white/10 shadow-md" />
 
                 <div className="mt-2 space-y-1">
-                  <div className="h-3 w-20 rounded shimmer" />
-                  <div className="h-2 w-14 rounded shimmer" />
+              <div className="h-3 w-20 rounded shimmer bg-white/10" />
+<div className="h-2 w-14 rounded shimmer bg-white/10" />
+              
                 </div>
 
               </div>
