@@ -6,7 +6,6 @@ import { db } from "../lib/firebase"
 
 export default function TrendingDealsSection({ filter }) {
   
-  /* 🔥 STATIC FALLBACK */
   const staticDeals = [
     {
       title: "Burger Combo",
@@ -30,15 +29,15 @@ export default function TrendingDealsSection({ filter }) {
     }
   ]
 
-  /* 🔥 STATE */
   const [deals, setDeals] = useState(staticDeals)
   const [visibleDeals, setVisibleDeals] = useState(staticDeals)
+
   const [loading, setLoading] = useState(true)
-  const [animating, setAnimating] = useState(false)
+  const [filterLoading, setFilterLoading] = useState(false) // 🔥 NEW
 
   const sliderRef = useRef(null)
 
-  /* 🔥 FETCH FROM FIREBASE */
+  /* 🔥 FETCH */
   useEffect(() => {
     const dealsRef = ref(db, "deals")
 
@@ -55,16 +54,11 @@ export default function TrendingDealsSection({ filter }) {
     })
   }, [])
 
-  /* 🔥 FILTER + ANIMATION */
+  /* 🔥 FILTER WITH VISIBLE LOADING */
   useEffect(() => {
     if (!deals) return
 
-    setAnimating(true)
-setLoading(true)
-
-setTimeout(() => {
-  setLoading(false)
-}, 600)
+    setFilterLoading(true) // 🔥 SHOW SHIMMER
 
     const timeout = setTimeout(() => {
 
@@ -82,9 +76,9 @@ setTimeout(() => {
 
       setVisibleDeals(filtered.length ? filtered : deals)
 
-      setAnimating(false)
+      setFilterLoading(false) // 🔥 HIDE SHIMMER
 
-    }, 700) // 🔥 slightly longer for shimmer visibility
+    }, 700) // 🔥 LONG ENOUGH TO SEE
 
     return () => clearTimeout(timeout)
 
@@ -113,11 +107,11 @@ setTimeout(() => {
   return (
     <div className="px-4 mt-4">
 
-      {/* 🔥 TITLE */}
       <h2 className="text-[16px] font-semibold mb-2 text-white">
         🔥 Trending Deals
       </h2>
 
+      {/* 🔥 GLOBAL LOADING */}
       {loading ? (
         <p className="text-gray-400 text-xs">Loading deals...</p>
       ) : (
@@ -127,47 +121,37 @@ setTimeout(() => {
           className="flex gap-3 overflow-x-auto no-scrollbar snap-x snap-mandatory"
         >
 
-          {/* 🔥 SKELETON WHEN FILTERING */}
-          {animating ? (
-            Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} className="min-w-[120px] animate-pulse">
+          {/* 🔥 FILTER SHIMMER */}
+          {filterLoading ? (
 
-                <div className="w-[120px] h-[85px] rounded-lg bg-gray-300/20 shimmer" />
+            Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="min-w-[120px]">
+
+                <div className="w-[120px] h-[85px] rounded-lg shimmer" />
 
                 <div className="mt-2 space-y-1">
-                  <div className="h-3 w-20 bg-gray-300/20 rounded shimmer" />
-                  <div className="h-2 w-14 bg-gray-300/20 rounded shimmer" />
+                  <div className="h-3 w-20 rounded shimmer" />
+                  <div className="h-2 w-14 rounded shimmer" />
                 </div>
 
               </div>
             ))
+
           ) : (
 
             visibleDeals.map((deal, i) => (
 
               <div
                 key={i}
-                className={`
-                  min-w-[120px] flex flex-col snap-start cursor-pointer
-                  transition-all duration-500 ease-out
-                  ${animating ? "opacity-0 translate-y-4" : "opacity-100 translate-y-0"}
-                `}
-                style={{
-                  transitionDelay: `${i * 60}ms`
-                }}
+                className="min-w-[120px] flex flex-col snap-start cursor-pointer transition-all duration-500 hover:scale-95"
               >
 
-                {/* 🔥 IMAGE */}
                 <div className="w-[120px] h-[85px] rounded-lg overflow-hidden">
-                  <img
-                    src={deal.img}
-                    className="w-full h-full object-cover"
-                  />
+                  <img src={deal.img} className="w-full h-full object-cover" />
                 </div>
 
-                {/* 🔥 TEXT */}
                 <div className="mt-1">
-                  <h3 className="text-[13px] font-medium text-white leading-tight">
+                  <h3 className="text-[13px] font-medium text-white">
                     {deal.title}
                   </h3>
                   <p className="text-[11px] text-gray-400">
@@ -190,6 +174,7 @@ setTimeout(() => {
         .shimmer {
           position: relative;
           overflow: hidden;
+          background: rgba(255,255,255,0.1);
         }
 
         .shimmer::after {
@@ -202,7 +187,7 @@ setTimeout(() => {
           background: linear-gradient(
             90deg,
             transparent,
-            rgba(255,255,255,0.2),
+            rgba(255,255,255,0.3),
             transparent
           );
           animation: shimmer 1.2s infinite;
@@ -217,4 +202,4 @@ setTimeout(() => {
 
     </div>
   )
-    }
+      }
