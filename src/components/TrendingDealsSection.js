@@ -52,7 +52,7 @@ export default function TrendingDealsSection() {
     })
   }, [])
 
-  /* 🔥 AUTO SCROLL (SMOOTHER + SMALLER STEP) */
+  /* 🔥 AUTO SCROLL (TUNED FOR SMALL CARDS) */
   useEffect(() => {
     const slider = sliderRef.current
     if (!slider) return
@@ -60,8 +60,8 @@ export default function TrendingDealsSection() {
     let scrollAmount = 0
 
     const interval = setInterval(() => {
-      slider.scrollBy({ left: 160, behavior: "smooth" })
-      scrollAmount += 160
+      slider.scrollBy({ left: 130, behavior: "smooth" })
+      scrollAmount += 130
 
       if (scrollAmount >= slider.scrollWidth - slider.clientWidth) {
         slider.scrollTo({ left: 0, behavior: "smooth" })
@@ -73,31 +73,31 @@ export default function TrendingDealsSection() {
   }, [])
 
   return (
-    <div className="px-4 mt-6">
+    <div className="px-4 mt-4">
 
       {/* 🔥 TITLE */}
-      <h2 className="text-lg font-semibold mb-3 text-white">
+      <h2 className="text-[16px] font-semibold mb-2 text-white">
         🔥 Trending Deals
       </h2>
 
       {loading ? (
-        <p className="text-gray-400 text-sm">Loading deals...</p>
+        <p className="text-gray-400 text-xs">Loading deals...</p>
       ) : (
 
         <div
           ref={sliderRef}
-          className="flex gap-4 overflow-x-auto no-scrollbar snap-x snap-mandatory"
+          className="flex gap-3 overflow-x-auto no-scrollbar snap-x snap-mandatory"
         >
 
           {deals.map((deal, i) => (
 
             <div
               key={i}
-              className="min-w-[140px] flex flex-col snap-start cursor-pointer active:scale-95 transition"
+              className="min-w-[120px] flex flex-col snap-start cursor-pointer active:scale-95 transition"
             >
 
-              {/* 🔥 IMAGE (SMALL + CLEAN) */}
-              <div className="w-[140px] h-[100px] rounded-xl overflow-hidden">
+              {/* 🔥 IMAGE */}
+              <div className="w-[120px] h-[85px] rounded-lg overflow-hidden">
                 <img
                   src={deal.img}
                   className="w-full h-full object-cover"
@@ -105,11 +105,11 @@ export default function TrendingDealsSection() {
               </div>
 
               {/* 🔥 TEXT */}
-              <div className="mt-2">
-                <h3 className="text-sm font-semibold text-white leading-tight">
+              <div className="mt-1">
+                <h3 className="text-[13px] font-medium text-white leading-tight">
                   {deal.title}
                 </h3>
-                <p className="text-xs text-gray-300">
+                <p className="text-[11px] text-gray-400">
                   {deal.desc}
                 </p>
               </div>
@@ -124,4 +124,4 @@ export default function TrendingDealsSection() {
 
     </div>
   )
-}
+    }
