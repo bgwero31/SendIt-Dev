@@ -32,10 +32,10 @@ export default function TrendingDealsSection({ filter }) {
 
   /* 🔥 STATE */
   const [deals, setDeals] = useState(staticDeals)
+  const [visibleDeals, setVisibleDeals] = useState(staticDeals)
   const [loading, setLoading] = useState(true)
-  const [visibleDeals, setVisibleDeals] = useState([])
-const [animating, setAnimating] = useState(false)
-  
+  const [animating, setAnimating] = useState(false)
+
   const sliderRef = useRef(null)
 
   /* 🔥 FETCH FROM FIREBASE */
@@ -48,41 +48,44 @@ const [animating, setAnimating] = useState(false)
       if (data) {
         const list = Object.values(data)
         setDeals(list)
+        setVisibleDeals(list)
       }
 
       setLoading(false)
     })
   }, [])
 
+  /* 🔥 FILTER + ANIMATION */
   useEffect(() => {
-  if (!deals) return
+    if (!deals) return
 
-  setAnimating(true)
+    setAnimating(true)
 
-  const timeout = setTimeout(() => {
+    const timeout = setTimeout(() => {
 
-    const filtered = deals.filter(deal => {
+      const filtered = deals.filter(deal => {
 
-      if (filter === "All") return true
+        if (filter === "All") return true
 
-      if (filter === "Under $5") return deal.price <= 5
-      if (filter === "Near & Fast") return deal.fast === true
-      if (filter === "Top Rated") return deal.rating >= 4.5
-      if (filter === "Popular") return deal.popular === true
+        if (filter === "Under $5") return (deal.price || 0) <= 5
+        if (filter === "Near & Fast") return deal.fast === true
+        if (filter === "Top Rated") return (deal.rating || 0) >= 4.5
+        if (filter === "Popular") return deal.popular === true
 
-      return true
-    })
+        return true
+      })
 
-    setVisibleDeals(filtered)
-    setAnimating(false)
+      setVisibleDeals(filtered.length ? filtered : deals)
 
-  }, 200) // delay for smooth feel
+      setAnimating(false)
 
-  return () => clearTimeout(timeout)
+    }, 400) // 🔥 slightly longer for shimmer visibility
 
-}, [filter, deals])
-  
-  /* 🔥 AUTO SCROLL (TUNED FOR SMALL CARDS) */
+    return () => clearTimeout(timeout)
+
+  }, [filter, deals])
+
+  /* 🔥 AUTO SCROLL */
   useEffect(() => {
     const slider = sliderRef.current
     if (!slider) return
@@ -119,40 +122,93 @@ const [animating, setAnimating] = useState(false)
           className="flex gap-3 overflow-x-auto no-scrollbar snap-x snap-mandatory"
         >
 
-            {visibleDeals.map((deal, i) => (
+          {/* 🔥 SKELETON WHEN FILTERING */}
+          {animating ? (
+            Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="min-w-[120px] animate-pulse">
+
+                <div className="w-[120px] h-[85px] rounded-lg bg-gray-300/20 shimmer" />
+
+                <div className="mt-2 space-y-1">
+                  <div className="h-3 w-20 bg-gray-300/20 rounded shimmer" />
+                  <div className="h-2 w-14 bg-gray-300/20 rounded shimmer" />
+                </div>
+
+              </div>
+            ))
+          ) : (
+
+            visibleDeals.map((deal, i) => (
 
               <div
-  className={`
-    min-w-[120px] flex flex-col snap-start cursor-pointer transition-all duration-300
-    ${animating ? "opacity-0 translate-y-2" : "opacity-100 translate-y-0"}
-  `}
->
+                key={i}
+                className={`
+                  min-w-[120px] flex flex-col snap-start cursor-pointer
+                  transition-all duration-500 ease-out
+                  ${animating ? "opacity-0 translate-y-4" : "opacity-100 translate-y-0"}
+                `}
+                style={{
+                  transitionDelay: `${i * 60}ms`
+                }}
+              >
 
-              {/* 🔥 IMAGE */}
-              <div className="w-[120px] h-[85px] rounded-lg overflow-hidden">
-                <img
-                  src={deal.img}
-                  className="w-full h-full object-cover"
-                />
+                {/* 🔥 IMAGE */}
+                <div className="w-[120px] h-[85px] rounded-lg overflow-hidden">
+                  <img
+                    src={deal.img}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+
+                {/* 🔥 TEXT */}
+                <div className="mt-1">
+                  <h3 className="text-[13px] font-medium text-white leading-tight">
+                    {deal.title}
+                  </h3>
+                  <p className="text-[11px] text-gray-400">
+                    {deal.desc}
+                  </p>
+                </div>
+
               </div>
 
-              {/* 🔥 TEXT */}
-              <div className="mt-1">
-                <h3 className="text-[13px] font-medium text-white leading-tight">
-                  {deal.title}
-                </h3>
-                <p className="text-[11px] text-gray-400">
-                  {deal.desc}
-                </p>
-              </div>
+            ))
 
-            </div>
-
-          ))}
+          )}
 
         </div>
 
       )}
+
+      {/* 🔥 SHIMMER STYLE */}
+      <style jsx>{`
+        .shimmer {
+          position: relative;
+          overflow: hidden;
+        }
+
+        .shimmer::after {
+          content: "";
+          position: absolute;
+          top: 0;
+          left: -150px;
+          height: 100%;
+          width: 150px;
+          background: linear-gradient(
+            90deg,
+            transparent,
+            rgba(255,255,255,0.2),
+            transparent
+          );
+          animation: shimmer 1.2s infinite;
+        }
+
+        @keyframes shimmer {
+          100% {
+            transform: translateX(300px);
+          }
+        }
+      `}</style>
 
     </div>
   )
