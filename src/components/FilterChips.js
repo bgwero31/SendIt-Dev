@@ -1,10 +1,6 @@
 'use client'
 
-import { useState } from "react"
-
-export default function FilterChips() {
-
-  const [active, setActive] = useState("Near & Fast")
+export default function FilterChips({ active, setActive }) {
 
   const filters = [
     { label: "Filters", icon: "sliders" },
@@ -66,4 +62,4 @@ export default function FilterChips() {
 
     </div>
   )
-}
+                }
