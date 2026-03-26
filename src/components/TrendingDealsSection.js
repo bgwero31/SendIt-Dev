@@ -33,7 +33,9 @@ export default function TrendingDealsSection({ filter }) {
   /* 🔥 STATE */
   const [deals, setDeals] = useState(staticDeals)
   const [loading, setLoading] = useState(true)
-
+  const [visibleDeals, setVisibleDeals] = useState([])
+const [animating, setAnimating] = useState(false)
+  
   const sliderRef = useRef(null)
 
   /* 🔥 FETCH FROM FIREBASE */
@@ -52,6 +54,34 @@ export default function TrendingDealsSection({ filter }) {
     })
   }, [])
 
+  useEffect(() => {
+  if (!deals) return
+
+  setAnimating(true)
+
+  const timeout = setTimeout(() => {
+
+    const filtered = deals.filter(deal => {
+
+      if (filter === "All") return true
+
+      if (filter === "Under $5") return deal.price <= 5
+      if (filter === "Near & Fast") return deal.fast === true
+      if (filter === "Top Rated") return deal.rating >= 4.5
+      if (filter === "Popular") return deal.popular === true
+
+      return true
+    })
+
+    setVisibleDeals(filtered)
+    setAnimating(false)
+
+  }, 200) // delay for smooth feel
+
+  return () => clearTimeout(timeout)
+
+}, [filter, deals])
+  
   /* 🔥 AUTO SCROLL (TUNED FOR SMALL CARDS) */
   useEffect(() => {
     const slider = sliderRef.current
@@ -89,35 +119,14 @@ export default function TrendingDealsSection({ filter }) {
           className="flex gap-3 overflow-x-auto no-scrollbar snap-x snap-mandatory"
         >
 
-          {deals
-  .filter(deal => {
+            {visibleDeals.map((deal, i) => (
 
-    if (filter === "All") return true
-
-    if (filter === "Under $5") {
-      return deal.price <= 5
-    }
-
-    if (filter === "Near & Fast") {
-      return deal.fast === true
-    }
-
-    if (filter === "Top Rated") {
-      return deal.rating >= 4.5
-    }
-
-    if (filter === "Popular") {
-      return deal.popular === true
-    }
-
-    return true
-  })
-  .map((deal, i) => (
-
-            <div
-              key={i}
-              className="min-w-[120px] flex flex-col snap-start cursor-pointer active:scale-95 transition"
-            >
+              <div
+  className={`
+    min-w-[120px] flex flex-col snap-start cursor-pointer transition-all duration-300
+    ${animating ? "opacity-0 translate-y-2" : "opacity-100 translate-y-0"}
+  `}
+>
 
               {/* 🔥 IMAGE */}
               <div className="w-[120px] h-[85px] rounded-lg overflow-hidden">
