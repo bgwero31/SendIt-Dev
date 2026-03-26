@@ -47,7 +47,7 @@ export default function CategorySlider() {
 
           <div className="flex flex-col items-center w-[65px]">
 
-            <div className="w-[55px] h-[55px] rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-[10px] font-semibold shadow-md">
+            <div className="w-[65px] h-[65px] rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-[10px] font-semibold shadow-md">
               UNDER<br/>$5
             </div>
 
@@ -73,7 +73,7 @@ export default function CategorySlider() {
             >
 
               {/* 🔥 FLOATING IMAGE (NO BACKGROUND) */}
-              <div className="w-[48px] h-[48px] flex items-center justify-center">
+              <div className="w-[42px] h-[42px] flex items-center justify-center">
                 <img
                   src={cat.img}
                   onError={(e) => (e.currentTarget.src = cat.fallback)}
