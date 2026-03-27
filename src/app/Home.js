@@ -335,7 +335,7 @@ export default function Home() {
   }, [activeTask])
 
   return (
-    <main className="min-h-screen bg-[#f8f8f8] text-[#111111] pb-28">
+    <main className="min-h-screen bg-[#f6f7fb] text-[#111111] pb-24">
       <SuccessToast show={success} text={toastText} />
 
       <CityPicker
@@ -348,137 +348,171 @@ export default function Home() {
         }}
       />
 
-      {/* Top spacing */}
-      <div className="mx-auto w-full max-w-md px-4 pt-4">
-        {/* Header */}
-        <section className="rounded-[28px] bg-white shadow-[0_8px_30px_rgba(0,0,0,0.06)] border border-black/5 p-4">
-          <div className="flex items-start justify-between gap-3">
+      <div className="mx-auto w-full max-w-md px-3.5 pt-3.5">
+        {/* Header / Hero */}
+        <section className="relative overflow-hidden rounded-[26px] border border-black/5 bg-white p-4 shadow-[0_10px_35px_rgba(0,0,0,0.06)]">
+          <div className="pointer-events-none absolute inset-0">
+            <div className="absolute -left-10 top-0 h-32 w-32 rounded-full bg-blue-100 blur-3xl opacity-80" />
+            <div className="absolute right-0 top-8 h-28 w-28 rounded-full bg-indigo-100 blur-3xl opacity-80" />
+            <div className="absolute bottom-0 left-1/3 h-24 w-24 rounded-full bg-sky-100 blur-2xl opacity-60" />
+
+            <div className="absolute inset-0 flex items-center justify-center">
+              <span className="select-none text-[52px] font-extrabold tracking-[-0.06em] text-blue-700/[0.04]">
+                SendIt
+              </span>
+            </div>
+          </div>
+
+          <div className="relative z-10 flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <p className="text-[13px] font-medium text-neutral-500">
+              <p className="text-[11px] font-medium text-neutral-500">
                 {greeting}
               </p>
-              <h1 className="mt-1 text-[24px] font-bold leading-tight tracking-[-0.02em] text-neutral-900">
+
+              <h1 className="mt-1 text-[21px] font-bold leading-tight tracking-[-0.03em] text-neutral-900">
                 {userName ? `${userName}, send anything fast.` : "Send anything fast."}
               </h1>
-              <div className="mt-3 flex items-center gap-2 flex-wrap">
+
+              <p className="mt-2 max-w-[250px] text-[12px] leading-5 text-neutral-600">
+                Food, parcels and errands delivered quickly by nearby runners.
+              </p>
+
+              <div className="mt-3 flex flex-wrap items-center gap-2">
                 <button
                   onClick={() => setShowPicker(true)}
-                  className="inline-flex items-center rounded-full bg-neutral-100 px-3 py-1.5 text-[12px] font-semibold text-neutral-700"
+                  className="inline-flex items-center rounded-full bg-neutral-100 px-3 py-1.5 text-[11px] font-semibold text-neutral-700"
                 >
                   📍 {city || "Choose city"}
                 </button>
 
-                <div className="rounded-full bg-emerald-50 px-3 py-1.5 text-[12px] font-semibold text-emerald-700">
+                <div className="rounded-full bg-emerald-50 px-3 py-1.5 text-[11px] font-semibold text-emerald-700">
                   {role === "runner" ? "Runner mode" : "Customer mode"}
                 </div>
               </div>
             </div>
 
             <div className="shrink-0">
-              <CreditsBadge />
+              <div className="rounded-full border border-blue-100 bg-blue-50 px-3 py-1.5 text-[11px] font-bold text-blue-700">
+                SendIt
+              </div>
             </div>
           </div>
 
-          {/* Strong CTA block */}
           {role === "user" && !activeTask && (
-            <div className="mt-5 rounded-[24px] bg-neutral-900 p-4 text-white">
-              <div className="flex items-start justify-between gap-4">
+            <div className="relative z-10 mt-4 rounded-[22px] border border-blue-100/80 bg-gradient-to-br from-[#0f172a] via-[#111827] to-[#1e3a8a] p-4 text-white shadow-[0_14px_34px_rgba(15,23,42,0.18)]">
+              <div className="flex items-start justify-between gap-3">
                 <div>
-                  <p className="text-[12px] font-medium text-white/70">
-                    Quick action
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-blue-200/90">
+                    Quick post
                   </p>
-                  <h2 className="mt-1 text-[18px] font-semibold leading-snug">
-                    Need food, parcels or errands handled?
+                  <h2 className="mt-1 text-[16px] font-semibold leading-snug">
+                    Need something delivered?
                   </h2>
-                  <p className="mt-1 text-[13px] leading-5 text-white/75">
-                    Post a task and get matched with a nearby runner in your city.
+                  <p className="mt-1 text-[12px] leading-5 text-white/72">
+                    Food, parcel or errand in {city || "your city"}.
                   </p>
-                </div>
-
-                <div className="rounded-2xl bg-white/10 px-3 py-2 text-right">
-                  <p className="text-[11px] text-white/60">Balance</p>
-                  <p className="text-[16px] font-bold">${walletBalance}</p>
                 </div>
               </div>
 
               <button
                 onClick={() => setOpen(true)}
                 disabled={!city}
-                className="mt-4 w-full rounded-2xl bg-white px-4 py-3.5 text-[15px] font-semibold text-neutral-900 transition active:scale-[0.99] disabled:opacity-50"
+                className="mt-4 w-full rounded-[18px] bg-white px-4 py-3 text-left text-neutral-900 shadow-sm transition active:scale-[0.99] disabled:opacity-50"
               >
-                + Post a task
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-[14px] font-semibold">Post a task</p>
+                    <p className="text-[11px] text-neutral-500">
+                      Tap to request delivery now
+                    </p>
+                  </div>
+                  <span className="text-[18px] font-bold">+</span>
+                </div>
               </button>
             </div>
           )}
 
-          {/* Active task card */}
           {activeTask && (
-            <div className="mt-5 rounded-[24px] border border-amber-200 bg-amber-50 p-4">
+            <div className="relative z-10 mt-4 rounded-[22px] border border-amber-200 bg-amber-50 p-4">
               <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className="text-[12px] font-semibold uppercase tracking-wide text-amber-700">
+                <div className="min-w-0">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-amber-700">
                     Active task
                   </p>
-                  <h3 className="mt-1 text-[17px] font-semibold text-neutral-900">
+                  <h3 className="mt-1 truncate text-[15px] font-semibold text-neutral-900">
                     {activeTask.title}
                   </h3>
-                  <p className="mt-1 text-[13px] text-neutral-600">
+                  <p className="mt-1 text-[12px] text-neutral-600">
                     {activeTaskStatusText}
                   </p>
                 </div>
 
-                <div className="rounded-full bg-white px-3 py-1.5 text-[12px] font-bold text-neutral-900 shadow-sm">
+                <div className="rounded-full bg-white px-3 py-1.5 text-[11px] font-bold text-neutral-900 shadow-sm">
                   ${activeTask.offerPrice}
                 </div>
               </div>
 
               <button
                 onClick={() => setOpen(true)}
-                className="mt-4 w-full rounded-2xl bg-neutral-900 px-4 py-3 text-[14px] font-semibold text-white active:scale-[0.99]"
+                className="mt-4 w-full rounded-[18px] bg-neutral-900 px-4 py-3 text-left text-white active:scale-[0.99]"
               >
-                View task progress
+                <div className="flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-[13px] font-semibold">Your posted task</p>
+                    <p className="max-w-[220px] truncate text-[11px] text-white/70">
+                      {activeTask.title}
+                    </p>
+                  </div>
+                  <span className="text-[12px] font-semibold">Open</span>
+                </div>
               </button>
             </div>
           )}
         </section>
 
         {/* Promo */}
-        <section className="mt-4 overflow-hidden rounded-[28px] bg-white shadow-[0_8px_30px_rgba(0,0,0,0.06)] border border-black/5">
+        <section className="mt-3.5 overflow-hidden rounded-[24px] border border-black/5 bg-white shadow-[0_8px_28px_rgba(0,0,0,0.05)]">
           <div className="px-4 pt-4 pb-2">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-[13px] font-semibold text-neutral-900">
-                  Offers & promos
-                </p>
-                <p className="mt-0.5 text-[12px] text-neutral-500">
-                  Better deals in {city || "your city"}
-                </p>
-              </div>
-            </div>
+            <p className="text-[12px] font-semibold text-neutral-900">
+              Offers & promos
+            </p>
+            <p className="mt-0.5 text-[11px] text-neutral-500">
+              Better deals in {city || "your city"}
+            </p>
           </div>
           <HomePromoCarousel userCity={city || ""} />
         </section>
 
         {/* Live activity */}
-        <section className="mt-4 rounded-[24px] bg-white shadow-[0_8px_30px_rgba(0,0,0,0.06)] border border-black/5 p-4">
-          <div className="mb-3">
-            <p className="text-[15px] font-semibold text-neutral-900">
-              Live activity
-            </p>
-            <p className="text-[12px] text-neutral-500">
-              What’s happening on SendIt right now
-            </p>
+        <section className="mt-3.5 rounded-[22px] border border-black/5 bg-white p-4 shadow-[0_8px_28px_rgba(0,0,0,0.05)]">
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <div>
+              <p className="text-[13px] font-semibold text-neutral-900">
+                Live activity
+              </p>
+              <p className="text-[11px] text-neutral-500">
+                What’s happening on SendIt right now
+              </p>
+            </div>
+
+            <div className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-2.5 py-1 text-[10px] font-semibold text-blue-700">
+              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-blue-600" />
+              Live
+            </div>
           </div>
-          <ActivityTicker />
+
+          <div className="rounded-[16px] bg-[#f8fbff] px-3 py-2">
+            <ActivityTicker />
+          </div>
         </section>
 
         {/* Categories */}
-        <section className="mt-4 rounded-[24px] bg-white shadow-[0_8px_30px_rgba(0,0,0,0.06)] border border-black/5 p-4">
+        <section className="mt-3.5 rounded-[22px] border border-black/5 bg-white p-4 shadow-[0_8px_28px_rgba(0,0,0,0.05)]">
           <div className="mb-3">
-            <p className="text-[15px] font-semibold text-neutral-900">
+            <p className="text-[13px] font-semibold text-neutral-900">
               Explore categories
             </p>
-            <p className="text-[12px] text-neutral-500">
+            <p className="text-[11px] text-neutral-500">
               Food, errands, parcels and more
             </p>
           </div>
@@ -486,17 +520,17 @@ export default function Home() {
         </section>
 
         {/* Deals */}
-        <section className="mt-4 rounded-[24px] bg-white shadow-[0_8px_30px_rgba(0,0,0,0.06)] border border-black/5 p-4">
+        <section className="mt-3.5 rounded-[22px] border border-black/5 bg-white p-4 shadow-[0_8px_28px_rgba(0,0,0,0.05)]">
           <div className="mb-3">
-            <p className="text-[15px] font-semibold text-neutral-900">
+            <p className="text-[13px] font-semibold text-neutral-900">
               Trending deals
             </p>
-            <p className="text-[12px] text-neutral-500">
+            <p className="text-[11px] text-neutral-500">
               Curated picks for faster ordering
             </p>
           </div>
 
-          <div className="mb-4">
+          <div className="mb-3">
             <FilterChips
               active={activeFilter}
               setActive={setActiveFilter}
@@ -517,46 +551,65 @@ export default function Home() {
 
       {/* Confirm task modal */}
       {confirmTask && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4 backdrop-blur-[2px] sm:items-center">
-          <div className="w-full max-w-sm rounded-[28px] bg-white p-5 shadow-2xl">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <p className="text-[12px] font-semibold uppercase tracking-wide text-indigo-600">
-                  Confirm task
+        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/38 px-4 pb-28 pt-6 backdrop-blur-[6px]">
+          <div className="relative w-full max-w-[350px] overflow-hidden rounded-[30px] border border-white/35 bg-white/78 p-4 shadow-[0_24px_80px_rgba(40,58,255,0.22)] backdrop-blur-2xl">
+            <div className="pointer-events-none absolute inset-0 overflow-hidden">
+              <div className="absolute -left-12 top-0 h-36 w-36 rounded-full bg-blue-500/18 blur-3xl" />
+              <div className="absolute -right-10 top-8 h-36 w-36 rounded-full bg-indigo-500/18 blur-3xl" />
+              <div className="absolute bottom-0 left-8 h-32 w-32 rounded-full bg-sky-400/14 blur-3xl" />
+              <div className="absolute bottom-2 right-4 h-28 w-28 rounded-full bg-blue-600/14 blur-3xl" />
+
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="select-none text-[54px] font-extrabold tracking-[-0.06em] text-blue-700/[0.06]">
+                  SendIt
+                </span>
+              </div>
+            </div>
+
+            <div className="relative z-10">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-blue-700">
+                    Confirm task
+                  </p>
+                  <h3 className="mt-1 text-[16px] font-bold leading-tight text-neutral-900">
+                    Post this request?
+                  </h3>
+                </div>
+
+                <div className="rounded-full border border-white/60 bg-white/70 px-3 py-1.5 text-[13px] font-bold text-neutral-900 shadow-sm">
+                  ${confirmTask.amount}
+                </div>
+              </div>
+
+              <div className="mt-4 rounded-[22px] border border-white/50 bg-white/52 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.65)]">
+                <p className="text-[15px] font-semibold leading-snug text-neutral-900">
+                  {confirmTask.title}
                 </p>
-                <h3 className="mt-1 text-[18px] font-bold text-neutral-900">
-                  Post this request?
-                </h3>
+                <p className="mt-2 text-[12px] leading-5 text-neutral-600">
+                  Credits will be reserved immediately and nearby runners in{" "}
+                  <span className="font-semibold text-neutral-800">
+                    {city || "your city"}
+                  </span>{" "}
+                  will be notified.
+                </p>
               </div>
 
-              <div className="rounded-full bg-neutral-100 px-3 py-1 text-[12px] font-bold text-neutral-900">
-                ${confirmTask.amount}
+              <div className="mt-4 grid grid-cols-2 gap-3">
+                <button
+                  onClick={() => setConfirmTask(null)}
+                  className="rounded-[18px] border border-neutral-200 bg-white/90 px-4 py-3 text-[14px] font-semibold text-neutral-700 shadow-sm transition active:scale-[0.98]"
+                >
+                  Cancel
+                </button>
+
+                <button
+                  onClick={confirmPostTask}
+                  className="rounded-[18px] bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-3 text-[14px] font-semibold text-white shadow-[0_14px_30px_rgba(37,99,235,0.34)] transition active:scale-[0.98]"
+                >
+                  Confirm
+                </button>
               </div>
-            </div>
-
-            <div className="mt-4 rounded-2xl bg-neutral-50 p-4">
-              <p className="text-[14px] font-medium text-neutral-900">
-                {confirmTask.title}
-              </p>
-              <p className="mt-1 text-[12px] leading-5 text-neutral-500">
-                Your credits will be reserved immediately and runners in {city || "your city"} will be notified.
-              </p>
-            </div>
-
-            <div className="mt-5 grid grid-cols-2 gap-3">
-              <button
-                onClick={() => setConfirmTask(null)}
-                className="rounded-2xl border border-neutral-200 bg-white px-4 py-3 text-[14px] font-semibold text-neutral-700"
-              >
-                Cancel
-              </button>
-
-              <button
-                onClick={confirmPostTask}
-                className="rounded-2xl bg-neutral-900 px-4 py-3 text-[14px] font-semibold text-white active:scale-[0.99]"
-              >
-                Confirm
-              </button>
             </div>
           </div>
         </div>
@@ -565,4 +618,4 @@ export default function Home() {
       <Navbar />
     </main>
   )
-  }
+}
