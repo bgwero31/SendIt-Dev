@@ -1,7 +1,7 @@
 "use client"
 
 
-mport { useMemo, useState } from "react"
+import { useMemo, useState } from "react"
 import { useParams, useRouter, useSearchParams } from "next/navigation"
 import {
   ArrowLeft,
