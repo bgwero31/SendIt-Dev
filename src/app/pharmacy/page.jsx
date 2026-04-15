@@ -428,6 +428,32 @@ export default function PharmacyPage() {
     })
   }
 
+  const openProduct = (id) => {
+    router.push(
+      `/pharmacy/product/${id}?store=${storeParam}&city=${encodeURIComponent(cityParam)}`
+    )
+  }
+
+  const goToCart = () => {
+    router.push(`/pharmacy/cart?store=${storeParam}&city=${encodeURIComponent(cityParam)}`)
+  }
+
+  const goToCheckout = () => {
+    router.push(`/pharmacy/checkout?store=${storeParam}&city=${encodeURIComponent(cityParam)}`)
+  }
+
+  const goToPrescription = () => {
+    router.push(`/pharmacy/prescription?store=${storeParam}&city=${encodeURIComponent(cityParam)}`)
+  }
+
+  const goToRequest = () => {
+    router.push(`/pharmacy/request?store=${storeParam}&city=${encodeURIComponent(cityParam)}`)
+  }
+
+  const goToOrders = () => {
+    router.push(`/pharmacy/orders?store=${storeParam}&city=${encodeURIComponent(cityParam)}`)
+  }
+
   return (
     <main className="min-h-screen bg-[#f6f7fb] pb-32">
       {/* TOP HERO */}
@@ -444,7 +470,10 @@ export default function PharmacyPage() {
               <ArrowLeft className="h-5 w-5" />
             </button>
 
-            <button className="relative flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-white/10 backdrop-blur-xl">
+            <button
+              onClick={goToCart}
+              className="relative flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-white/10 backdrop-blur-xl"
+            >
               <ShoppingCart className="h-5 w-5" />
               {cartCount > 0 && (
                 <span className="absolute -right-1 -top-1 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-white px-1 text-[10px] font-bold text-[#0f172a]">
@@ -526,9 +555,12 @@ export default function PharmacyPage() {
       </section>
 
       {/* ACTION BUTTONS */}
-      <section className="px-4 -mt-4 relative z-20">
+      <section className="relative z-20 -mt-4 px-4">
         <div className="grid grid-cols-3 gap-3">
-          <button className="rounded-[22px] bg-white p-4 text-left shadow-[0_10px_30px_rgba(0,0,0,0.08)]">
+          <button
+            onClick={goToPrescription}
+            className="rounded-[22px] bg-white p-4 text-left shadow-[0_10px_30px_rgba(0,0,0,0.08)]"
+          >
             <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#eef4ff]">
               <FileText className="h-4.5 w-4.5 text-[#173ea5]" />
             </div>
@@ -540,7 +572,10 @@ export default function PharmacyPage() {
             </p>
           </button>
 
-          <button className="rounded-[22px] bg-white p-4 text-left shadow-[0_10px_30px_rgba(0,0,0,0.08)]">
+          <button
+            onClick={goToCheckout}
+            className="rounded-[22px] bg-white p-4 text-left shadow-[0_10px_30px_rgba(0,0,0,0.08)]"
+          >
             <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#eefaf1]">
               <Truck className="h-4.5 w-4.5 text-[#0c8f4d]" />
             </div>
@@ -552,7 +587,10 @@ export default function PharmacyPage() {
             </p>
           </button>
 
-          <button className="rounded-[22px] bg-white p-4 text-left shadow-[0_10px_30px_rgba(0,0,0,0.08)]">
+          <button
+            onClick={goToRequest}
+            className="rounded-[22px] bg-white p-4 text-left shadow-[0_10px_30px_rgba(0,0,0,0.08)]"
+          >
             <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#fff6ee]">
               <Stethoscope className="h-4.5 w-4.5 text-[#c96b16]" />
             </div>
@@ -586,8 +624,11 @@ export default function PharmacyPage() {
                 {currentCatalog.promos[promoIndex]?.subtitle}
               </p>
 
-              <button className="mt-5 inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-[12px] font-semibold text-[#101828]">
-                Shop now
+              <button
+                onClick={goToOrders}
+                className="mt-5 inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-[12px] font-semibold text-[#101828]"
+              >
+                Open orders
                 <ChevronRight className="h-4 w-4" />
               </button>
             </div>
@@ -706,7 +747,10 @@ export default function PharmacyPage() {
                     </p>
                   </div>
 
-                  <button className="text-[12px] font-semibold text-[#1d3f98]">
+                  <button
+                    onClick={goToOrders}
+                    className="text-[12px] font-semibold text-[#1d3f98]"
+                  >
                     See all
                   </button>
                 </div>
@@ -722,75 +766,83 @@ export default function PharmacyPage() {
                         key={item.id}
                         className="w-[170px] rounded-[24px] border border-neutral-200 bg-white p-3 shadow-[0_8px_22px_rgba(0,0,0,0.05)]"
                       >
-                        <div className="relative flex h-[118px] items-center justify-center rounded-[20px] bg-gradient-to-br from-[#eff4ff] via-[#f8fbff] to-[#edf7f4]">
-                          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white shadow-sm">
-                            <Pill className="h-6 w-6 text-[#173ea5]" />
-                          </div>
+                        <button
+                          onClick={() => openProduct(item.id)}
+                          className="block w-full text-left"
+                        >
+                          <div className="relative flex h-[118px] items-center justify-center rounded-[20px] bg-gradient-to-br from-[#eff4ff] via-[#f8fbff] to-[#edf7f4]">
+                            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white shadow-sm">
+                              <Pill className="h-6 w-6 text-[#173ea5]" />
+                            </div>
 
-                          {item.rx && (
-                            <span className="absolute left-2 top-2 rounded-full bg-[#10214e] px-2 py-1 text-[9px] font-semibold text-white">
-                              Prescription
-                            </span>
-                          )}
-                        </div>
-
-                        <div className="mt-3">
-                          <p className="line-clamp-1 text-[13px] font-semibold text-neutral-900">
-                            {item.name}
-                          </p>
-                          <p className="mt-1 text-[11px] text-neutral-500">
-                            {item.size}
-                          </p>
-
-                          <div className="mt-2 flex items-center gap-2">
-                            <span className="text-[14px] font-semibold text-neutral-900">
-                              {item.price}
-                            </span>
-                            {item.oldPrice ? (
-                              <span className="text-[11px] text-neutral-400 line-through">
-                                {item.oldPrice}
+                            {item.rx && (
+                              <span className="absolute left-2 top-2 rounded-full bg-[#10214e] px-2 py-1 text-[9px] font-semibold text-white">
+                                Prescription
                               </span>
-                            ) : null}
-                          </div>
-
-                          <div className="mt-3 flex items-center justify-between">
-                            <span className="rounded-full bg-neutral-100 px-2.5 py-1 text-[10px] font-medium text-neutral-600">
-                              {item.category}
-                            </span>
-
-                            {!item.rx ? (
-                              qty > 0 ? (
-                                <div className="flex items-center gap-2 rounded-full border border-neutral-200 px-2 py-1">
-                                  <button
-                                    onClick={() => decreaseQty(item.id)}
-                                    className="flex h-6 w-6 items-center justify-center rounded-full bg-neutral-100"
-                                  >
-                                    <Minus className="h-3.5 w-3.5" />
-                                  </button>
-                                  <span className="min-w-[14px] text-center text-[12px] font-semibold text-neutral-900">
-                                    {qty}
-                                  </span>
-                                  <button
-                                    onClick={() => increaseQty(item.id)}
-                                    className="flex h-6 w-6 items-center justify-center rounded-full bg-[#10214e] text-white"
-                                  >
-                                    <Plus className="h-3.5 w-3.5" />
-                                  </button>
-                                </div>
-                              ) : (
-                                <button
-                                  onClick={() => increaseQty(item.id)}
-                                  className="rounded-full bg-[#10214e] px-3 py-1.5 text-[11px] font-semibold text-white"
-                                >
-                                  Add
-                                </button>
-                              )
-                            ) : (
-                              <button className="rounded-full border border-neutral-200 px-3 py-1.5 text-[11px] font-semibold text-neutral-700">
-                                Request
-                              </button>
                             )}
                           </div>
+
+                          <div className="mt-3">
+                            <p className="line-clamp-1 text-[13px] font-semibold text-neutral-900">
+                              {item.name}
+                            </p>
+                            <p className="mt-1 text-[11px] text-neutral-500">
+                              {item.size}
+                            </p>
+
+                            <div className="mt-2 flex items-center gap-2">
+                              <span className="text-[14px] font-semibold text-neutral-900">
+                                {item.price}
+                              </span>
+                              {item.oldPrice ? (
+                                <span className="text-[11px] text-neutral-400 line-through">
+                                  {item.oldPrice}
+                                </span>
+                              ) : null}
+                            </div>
+                          </div>
+                        </button>
+
+                        <div className="mt-3 flex items-center justify-between">
+                          <span className="rounded-full bg-neutral-100 px-2.5 py-1 text-[10px] font-medium text-neutral-600">
+                            {item.category}
+                          </span>
+
+                          {!item.rx ? (
+                            qty > 0 ? (
+                              <div className="flex items-center gap-2 rounded-full border border-neutral-200 px-2 py-1">
+                                <button
+                                  onClick={() => decreaseQty(item.id)}
+                                  className="flex h-6 w-6 items-center justify-center rounded-full bg-neutral-100"
+                                >
+                                  <Minus className="h-3.5 w-3.5" />
+                                </button>
+                                <span className="min-w-[14px] text-center text-[12px] font-semibold text-neutral-900">
+                                  {qty}
+                                </span>
+                                <button
+                                  onClick={() => increaseQty(item.id)}
+                                  className="flex h-6 w-6 items-center justify-center rounded-full bg-[#10214e] text-white"
+                                >
+                                  <Plus className="h-3.5 w-3.5" />
+                                </button>
+                              </div>
+                            ) : (
+                              <button
+                                onClick={() => increaseQty(item.id)}
+                                className="rounded-full bg-[#10214e] px-3 py-1.5 text-[11px] font-semibold text-white"
+                              >
+                                Add
+                              </button>
+                            )
+                          ) : (
+                            <button
+                              onClick={goToPrescription}
+                              className="rounded-full border border-neutral-200 px-3 py-1.5 text-[11px] font-semibold text-neutral-700"
+                            >
+                              Request
+                            </button>
+                          )}
                         </div>
                       </div>
                     )
@@ -831,11 +883,14 @@ export default function PharmacyPage() {
             </p>
           </div>
 
-          <button className="rounded-full bg-white px-4 py-2 text-[12px] font-semibold text-[#101828]">
+          <button
+            onClick={cartCount > 0 ? goToCart : goToCheckout}
+            className="rounded-full bg-white px-4 py-2 text-[12px] font-semibold text-[#101828]"
+          >
             Continue
           </button>
         </div>
       </div>
     </main>
   )
-    }
+        }
