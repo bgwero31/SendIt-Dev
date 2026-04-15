@@ -3,6 +3,16 @@ export const dynamic = 'force-dynamic'
 
 import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
+import {
+  Pill,
+  ShoppingBasket,
+  UtensilsCrossed,
+  Package,
+  Zap,
+  ShoppingBag,
+  ChevronRight,
+  Store
+} from "lucide-react"
 
 import { db, auth } from "../lib/firebase"
 import {
@@ -32,11 +42,6 @@ export default function Home() {
   const [city, setCity] = useState(null)
   const [showPicker, setShowPicker] = useState(false)
 
-  /* 🔥 DEBUG ADDED */
-  useEffect(() => {
-    console.log("🔥 CURRENT USER CITY STATE:", city)
-  }, [city])
-
   /* ================= ROLE ================= */
   const [role, setRole] = useState("user")
 
@@ -48,60 +53,65 @@ export default function Home() {
   const [activeTask, setActiveTask] = useState(null)
   const [postedTaskId, setPostedTaskId] = useState(null)
   const [activeFilter, setActiveFilter] = useState("All")
-  /* NEW: confirm modal state */
   const [confirmTask, setConfirmTask] = useState(null)
+  const [showPharmacyPicker, setShowPharmacyPicker] = useState(false)
 
   /* prevent toast spam */
   const seenViews = useRef({})
 
+  /* ================= CATEGORY DATA ================= */
   const homeCategories = [
     {
       title: "Food",
-      subtitle: "Meals & drinks",
-      emoji: "🍔",
-      bg: "from-orange-50 to-amber-100",
-      iconBg: "bg-orange-500",
-      href: "/food"
+      subtitle: "Meals",
+      href: "/food",
+      icon: UtensilsCrossed
     },
     {
       title: "Groceries",
-      subtitle: "Daily essentials",
-      emoji: "🛒",
-      bg: "from-emerald-50 to-green-100",
-      iconBg: "bg-emerald-500",
-      href: "/groceries"
+      subtitle: "Essentials",
+      href: "/groceries",
+      icon: ShoppingBasket
     },
     {
       title: "Pharmacy",
-      subtitle: "Meds & health",
-      emoji: "💊",
-      bg: "from-sky-50 to-cyan-100",
-      iconBg: "bg-sky-500",
-      href: "/pharmacy"
+      subtitle: "Meds",
+      href: "/pharmacy",
+      icon: Pill
     },
     {
       title: "Parcels",
-      subtitle: "Send packages",
-      emoji: "📦",
-      bg: "from-violet-50 to-indigo-100",
-      iconBg: "bg-indigo-500",
-      href: "/parcels"
+      subtitle: "Delivery",
+      href: "/parcels",
+      icon: Package
     },
     {
       title: "Errands",
-      subtitle: "Custom requests",
-      emoji: "⚡",
-      bg: "from-blue-50 to-indigo-100",
-      iconBg: "bg-blue-600",
-      href: "/errands"
+      subtitle: "Requests",
+      href: "/errands",
+      icon: Zap
     },
     {
       title: "Pickups",
-      subtitle: "Collect items",
-      emoji: "🛍️",
-      bg: "from-pink-50 to-rose-100",
-      iconBg: "bg-rose-500",
-      href: "/pickups"
+      subtitle: "Collect",
+      href: "/pickups",
+      icon: ShoppingBag
+    }
+  ]
+
+  /* ================= PHARMACY PROVIDERS ================= */
+  const pharmacyProviders = [
+    {
+      id: "alliance-pharmacy",
+      name: "Alliance Pharmacy",
+      subtitle: "Trusted local pharmacy",
+      href: "/pharmacy?store=alliance-pharmacy"
+    },
+    {
+      id: "rehome-pharmacy",
+      name: "Rehome Pharmacy",
+      subtitle: "Health & medicine pickup",
+      href: "/pharmacy?store=rehome-pharmacy"
     }
   ]
 
@@ -111,7 +121,22 @@ export default function Home() {
       return
     }
 
+    if (item.title === "Pharmacy") {
+      setShowPharmacyPicker(true)
+      return
+    }
+
     router.push(item.href)
+  }
+
+  const openPharmacyStore = (store) => {
+    if (!city) {
+      setShowPicker(true)
+      return
+    }
+
+    setShowPharmacyPicker(false)
+    router.push(`${store.href}&city=${encodeURIComponent(city)}`)
   }
 
   /* ================= AUTH + USER PROFILE ================= */
@@ -372,45 +397,47 @@ export default function Home() {
 
       <ActivityTicker />
 
-      {/* Glovo-style categories */}
+      {/* Zomato / Glovo style inline categories */}
       <section className="px-4 mt-4">
-        <div className="rounded-[22px] border border-black/5 bg-white p-4 shadow-[0_8px_28px_rgba(0,0,0,0.05)]">
-          <div className="mb-3 flex items-start justify-between gap-3">
-            <div>
-              <p className="text-[13px] font-semibold text-neutral-900">
-                Explore categories
-              </p>
-              <p className="text-[11px] text-neutral-500">
-                Tap a category to open
-              </p>
-            </div>
-
-            <div className="rounded-full bg-neutral-100 px-2.5 py-1 text-[10px] font-semibold text-neutral-600">
-              {city || "Choose city"}
-            </div>
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <p className="text-[14px] font-semibold text-neutral-900">
+              Explore categories
+            </p>
+            <p className="text-[11px] text-neutral-500">
+              Choose what you want
+            </p>
           </div>
 
-          <div className="grid grid-cols-3 gap-3">
-            {homeCategories.map((item) => (
-              <button
-                key={item.title}
-                onClick={() => openCategory(item)}
-                className={`group rounded-[20px] border border-black/5 bg-gradient-to-br ${item.bg} p-3 text-left transition active:scale-[0.98]`}
-              >
-                <div
-                  className={`mb-3 flex h-11 w-11 items-center justify-center rounded-[14px] ${item.iconBg} text-[20px] shadow-[0_10px_20px_rgba(0,0,0,0.10)]`}
-                >
-                  <span>{item.emoji}</span>
-                </div>
+          <div className="rounded-full border border-black/5 bg-white px-2.5 py-1 text-[10px] font-semibold text-neutral-600 shadow-sm">
+            {city || "Choose city"}
+          </div>
+        </div>
 
-                <p className="text-[13px] font-semibold tracking-[-0.02em] text-neutral-900">
-                  {item.title}
-                </p>
-                <p className="mt-0.5 text-[10px] leading-4 text-neutral-600">
-                  {item.subtitle}
-                </p>
-              </button>
-            ))}
+        <div className="overflow-x-auto scrollbar-hide">
+          <div className="flex min-w-max gap-4 pr-4">
+            {homeCategories.map((item) => {
+              const Icon = item.icon
+
+              return (
+                <button
+                  key={item.title}
+                  onClick={() => openCategory(item)}
+                  className="group flex min-w-[78px] flex-col items-center text-center transition active:scale-[0.97]"
+                >
+                  <div className="flex h-14 w-14 items-center justify-center rounded-full border border-black/5 bg-white shadow-[0_8px_24px_rgba(0,0,0,0.06)] transition group-hover:shadow-[0_12px_28px_rgba(0,0,0,0.08)]">
+                    <Icon className="h-5 w-5 text-neutral-800" strokeWidth={2} />
+                  </div>
+
+                  <p className="mt-2 text-[12px] font-semibold leading-4 text-neutral-900">
+                    {item.title}
+                  </p>
+                  <p className="mt-0.5 text-[10px] leading-3 text-neutral-500">
+                    {item.subtitle}
+                  </p>
+                </button>
+              )
+            })}
           </div>
         </div>
       </section>
@@ -477,7 +504,59 @@ export default function Home() {
         </div>
       )}
 
+      {/* PHARMACY PICKER */}
+      {showPharmacyPicker && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-end justify-center">
+          <div className="w-full max-w-xl rounded-t-[30px] bg-white px-5 pb-7 pt-5 shadow-2xl">
+            <div className="mx-auto mb-4 h-1.5 w-14 rounded-full bg-neutral-200" />
+
+            <div className="mb-4">
+              <p className="text-[18px] font-semibold tracking-[-0.02em] text-neutral-900">
+                Choose pharmacy
+              </p>
+              <p className="mt-1 text-[12px] text-neutral-500">
+                Compare available pharmacies in {city || "your city"}
+              </p>
+            </div>
+
+            <div className="space-y-3">
+              {pharmacyProviders.map((store) => (
+                <button
+                  key={store.id}
+                  onClick={() => openPharmacyStore(store)}
+                  className="w-full rounded-2xl border border-neutral-200 bg-white px-4 py-4 text-left transition hover:border-neutral-300 hover:bg-neutral-50 active:scale-[0.99]"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-neutral-100">
+                      <Store className="h-5 w-5 text-neutral-800" />
+                    </div>
+
+                    <div className="flex-1">
+                      <p className="text-[14px] font-semibold text-neutral-900">
+                        {store.name}
+                      </p>
+                      <p className="text-[11px] text-neutral-500">
+                        {store.subtitle}
+                      </p>
+                    </div>
+
+                    <ChevronRight className="h-4 w-4 text-neutral-400" />
+                  </div>
+                </button>
+              ))}
+            </div>
+
+            <button
+              onClick={() => setShowPharmacyPicker(false)}
+              className="mt-5 w-full rounded-2xl border border-neutral-200 py-3 text-[13px] font-semibold text-neutral-700"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+
       <Navbar />
     </main>
   )
-  }
+}
