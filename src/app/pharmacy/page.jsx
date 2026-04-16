@@ -22,6 +22,44 @@ import {
   Stethoscope
 } from "lucide-react"
 
+const IMG = {
+  paracetamol:
+    "https://commons.wikimedia.org/wiki/Special:FilePath/Medication%20Paracetamol.JPG",
+  ibuprofen:
+    "https://commons.wikimedia.org/wiki/Special:FilePath/200mg%20ibuprofen%20tablets.jpg",
+  coughSyrup:
+    "https://commons.wikimedia.org/wiki/Special:FilePath/Vintage%20Turkish%20pediatric%20cough%20syrup%20bottle.png",
+  vitamins:
+    "https://commons.wikimedia.org/wiki/Special:FilePath/Vitamin%20tablets%20%2827522813860%29.jpg",
+  pills:
+    "https://commons.wikimedia.org/wiki/Special:FilePath/Paracetamol%20acetaminophen%20500%20mg%20pills.jpg"
+}
+
+function ProductImage({ src, alt, className = "" }) {
+  const [hasError, setHasError] = useState(false)
+
+  if (!src || hasError) {
+    return (
+      <div className={`flex items-center justify-center bg-gradient-to-br from-[#eff4ff] via-[#f8fbff] to-[#edf7f4] ${className}`}>
+        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white shadow-sm">
+          <Pill className="h-6 w-6 text-[#173ea5]" />
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className={`overflow-hidden bg-gradient-to-br from-[#eff4ff] via-[#f8fbff] to-[#edf7f4] ${className}`}>
+      <img
+        src={src}
+        alt={alt}
+        onError={() => setHasError(true)}
+        className="h-full w-full object-cover"
+      />
+    </div>
+  )
+}
+
 export default function PharmacyPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -36,7 +74,8 @@ export default function PharmacyPage() {
       tagline: "Fast medicine access, trusted local care",
       eta: "18–35 min",
       location: cityParam,
-      badge: "Open now"
+      badge: "Open now",
+      coverImage: IMG.vitamins
     },
     {
       id: "rehome-pharmacy",
@@ -44,7 +83,8 @@ export default function PharmacyPage() {
       tagline: "Daily health essentials and prescription support",
       eta: "20–40 min",
       location: cityParam,
-      badge: "Popular"
+      badge: "Popular",
+      coverImage: IMG.ibuprofen
     }
   ]
 
@@ -58,19 +98,22 @@ export default function PharmacyPage() {
           id: 1,
           title: "Wellness Week",
           subtitle: "Selected vitamins and essentials",
-          tag: "Up to 20% off"
+          tag: "Up to 20% off",
+          image: IMG.vitamins
         },
         {
           id: 2,
           title: "Fast pickup ready",
           subtitle: "Order now and collect from store",
-          tag: "Pickup today"
+          tag: "Pickup today",
+          image: IMG.paracetamol
         },
         {
           id: 3,
           title: "Prescription support",
           subtitle: "Upload your script for pharmacist review",
-          tag: "Secure process"
+          tag: "Secure process",
+          image: IMG.coughSyrup
         }
       ],
       categories: [
@@ -94,7 +137,8 @@ export default function PharmacyPage() {
               price: "$3.50",
               oldPrice: "$4.00",
               category: "Pain Relief",
-              rx: false
+              rx: false,
+              image: IMG.paracetamol
             },
             {
               id: "a2",
@@ -103,7 +147,8 @@ export default function PharmacyPage() {
               price: "$6.99",
               oldPrice: "",
               category: "Vitamins",
-              rx: false
+              rx: false,
+              image: IMG.vitamins
             },
             {
               id: "a3",
@@ -112,7 +157,8 @@ export default function PharmacyPage() {
               price: "$5.80",
               oldPrice: "",
               category: "Cold & Flu",
-              rx: false
+              rx: false,
+              image: IMG.coughSyrup
             },
             {
               id: "a4",
@@ -121,7 +167,8 @@ export default function PharmacyPage() {
               price: "$4.50",
               oldPrice: "",
               category: "Care",
-              rx: false
+              rx: false,
+              image: IMG.pills
             }
           ]
         },
@@ -137,7 +184,8 @@ export default function PharmacyPage() {
               price: "$2.20",
               oldPrice: "",
               category: "Pain Relief",
-              rx: false
+              rx: false,
+              image: IMG.paracetamol
             },
             {
               id: "a6",
@@ -146,7 +194,8 @@ export default function PharmacyPage() {
               price: "$8.99",
               oldPrice: "$10.50",
               category: "Vitamins",
-              rx: false
+              rx: false,
+              image: IMG.vitamins
             },
             {
               id: "a7",
@@ -155,7 +204,8 @@ export default function PharmacyPage() {
               price: "$6.20",
               oldPrice: "",
               category: "Cold & Flu",
-              rx: false
+              rx: false,
+              image: IMG.coughSyrup
             },
             {
               id: "a8",
@@ -164,7 +214,8 @@ export default function PharmacyPage() {
               price: "$3.40",
               oldPrice: "",
               category: "Personal Care",
-              rx: false
+              rx: false,
+              image: IMG.pills
             }
           ]
         },
@@ -180,7 +231,8 @@ export default function PharmacyPage() {
               price: "By review",
               oldPrice: "",
               category: "Prescription",
-              rx: true
+              rx: true,
+              image: IMG.pills
             },
             {
               id: "a10",
@@ -189,7 +241,8 @@ export default function PharmacyPage() {
               price: "By review",
               oldPrice: "",
               category: "Prescription",
-              rx: true
+              rx: true,
+              image: IMG.ibuprofen
             },
             {
               id: "a11",
@@ -198,7 +251,8 @@ export default function PharmacyPage() {
               price: "By review",
               oldPrice: "",
               category: "Prescription",
-              rx: true
+              rx: true,
+              image: IMG.paracetamol
             }
           ]
         }
@@ -211,19 +265,22 @@ export default function PharmacyPage() {
           id: 1,
           title: "Rehome Care Deals",
           subtitle: "Everyday pharmacy value picks",
-          tag: "Fresh offers"
+          tag: "Fresh offers",
+          image: IMG.ibuprofen
         },
         {
           id: 2,
           title: "Message before you travel",
           subtitle: "Check if your medicine is available",
-          tag: "Quick response"
+          tag: "Quick response",
+          image: IMG.coughSyrup
         },
         {
           id: 3,
           title: "Family essentials",
           subtitle: "Baby care, vitamins and more",
-          tag: "Popular"
+          tag: "Popular",
+          image: IMG.vitamins
         }
       ],
       categories: [
@@ -247,7 +304,8 @@ export default function PharmacyPage() {
               price: "$4.20",
               oldPrice: "",
               category: "Pain Relief",
-              rx: false
+              rx: false,
+              image: IMG.ibuprofen
             },
             {
               id: "r2",
@@ -256,7 +314,8 @@ export default function PharmacyPage() {
               price: "$7.50",
               oldPrice: "",
               category: "Vitamins",
-              rx: false
+              rx: false,
+              image: IMG.vitamins
             },
             {
               id: "r3",
@@ -265,7 +324,8 @@ export default function PharmacyPage() {
               price: "$5.60",
               oldPrice: "$6.20",
               category: "Cold & Flu",
-              rx: false
+              rx: false,
+              image: IMG.coughSyrup
             },
             {
               id: "r4",
@@ -274,7 +334,8 @@ export default function PharmacyPage() {
               price: "$3.99",
               oldPrice: "",
               category: "Baby Care",
-              rx: false
+              rx: false,
+              image: IMG.pills
             }
           ]
         },
@@ -290,7 +351,8 @@ export default function PharmacyPage() {
               price: "$4.80",
               oldPrice: "",
               category: "Personal Care",
-              rx: false
+              rx: false,
+              image: IMG.pills
             },
             {
               id: "r6",
@@ -299,7 +361,8 @@ export default function PharmacyPage() {
               price: "$9.20",
               oldPrice: "",
               category: "Vitamins",
-              rx: false
+              rx: false,
+              image: IMG.vitamins
             },
             {
               id: "r7",
@@ -308,7 +371,8 @@ export default function PharmacyPage() {
               price: "$2.90",
               oldPrice: "",
               category: "Cold & Flu",
-              rx: false
+              rx: false,
+              image: IMG.coughSyrup
             },
             {
               id: "r8",
@@ -317,7 +381,8 @@ export default function PharmacyPage() {
               price: "$11.50",
               oldPrice: "",
               category: "Care",
-              rx: false
+              rx: false,
+              image: IMG.ibuprofen
             }
           ]
         },
@@ -333,7 +398,8 @@ export default function PharmacyPage() {
               price: "By review",
               oldPrice: "",
               category: "Prescription",
-              rx: true
+              rx: true,
+              image: IMG.pills
             },
             {
               id: "r10",
@@ -342,7 +408,8 @@ export default function PharmacyPage() {
               price: "By review",
               oldPrice: "",
               category: "Prescription",
-              rx: true
+              rx: true,
+              image: IMG.paracetamol
             },
             {
               id: "r11",
@@ -351,7 +418,8 @@ export default function PharmacyPage() {
               price: "By review",
               oldPrice: "",
               category: "Prescription",
-              rx: true
+              rx: true,
+              image: IMG.ibuprofen
             }
           ]
         }
@@ -456,8 +524,14 @@ export default function PharmacyPage() {
 
   return (
     <main className="min-h-screen bg-[#f6f7fb] pb-32">
-      {/* TOP HERO */}
       <section className="relative overflow-hidden bg-gradient-to-b from-[#0f172a] via-[#142347] to-[#1f3c88] px-4 pb-6 pt-4 text-white">
+        <div className="absolute inset-0 opacity-15">
+          <img
+            src={activeStore.coverImage}
+            alt={activeStore.name}
+            className="h-full w-full object-cover"
+          />
+        </div>
         <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/10 blur-3xl" />
         <div className="absolute -left-8 top-24 h-32 w-32 rounded-full bg-cyan-300/10 blur-3xl" />
 
@@ -513,7 +587,6 @@ export default function PharmacyPage() {
             </div>
           </div>
 
-          {/* STORE SWITCH */}
           <div className="mt-5 overflow-x-auto scrollbar-hide">
             <div className="flex min-w-max gap-2 pr-4">
               {stores.map((store) => {
@@ -539,7 +612,6 @@ export default function PharmacyPage() {
             </div>
           </div>
 
-          {/* SEARCH */}
           <div className="mt-5">
             <div className="flex items-center gap-3 rounded-[22px] border border-white/15 bg-white/10 px-4 py-3 backdrop-blur-xl">
               <Search className="h-4.5 w-4.5 text-white/80" />
@@ -554,7 +626,6 @@ export default function PharmacyPage() {
         </div>
       </section>
 
-      {/* ACTION BUTTONS */}
       <section className="relative z-20 -mt-4 px-4">
         <div className="grid grid-cols-3 gap-3">
           <button
@@ -604,33 +675,41 @@ export default function PharmacyPage() {
         </div>
       </section>
 
-      {/* PROMO CAROUSEL FEEL */}
       <section className="mt-5 px-4">
         <div className="overflow-hidden rounded-[28px] bg-white shadow-[0_12px_34px_rgba(0,0,0,0.08)]">
-          <div className="relative min-h-[180px] bg-gradient-to-br from-[#0e1730] via-[#18326e] to-[#3258c8] p-5 text-white">
+          <div className="relative min-h-[220px] overflow-hidden bg-gradient-to-br from-[#0e1730] via-[#18326e] to-[#3258c8] text-white">
+            <div className="absolute inset-0">
+              <img
+                src={currentCatalog.promos[promoIndex]?.image}
+                alt={currentCatalog.promos[promoIndex]?.title}
+                className="h-full w-full object-cover opacity-30"
+              />
+            </div>
             <div className="absolute right-0 top-0 h-40 w-40 rounded-full bg-white/10 blur-3xl" />
             <div className="absolute bottom-0 left-0 h-32 w-32 rounded-full bg-cyan-300/10 blur-3xl" />
 
-            <div className="relative z-10 max-w-[420px]">
-              <div className="inline-flex rounded-full bg-white/15 px-3 py-1 text-[10px] font-semibold backdrop-blur-xl">
-                {currentCatalog.promos[promoIndex]?.tag}
+            <div className="relative z-10 flex min-h-[220px] items-center p-5">
+              <div className="max-w-[420px]">
+                <div className="inline-flex rounded-full bg-white/15 px-3 py-1 text-[10px] font-semibold backdrop-blur-xl">
+                  {currentCatalog.promos[promoIndex]?.tag}
+                </div>
+
+                <h2 className="mt-3 text-[24px] font-semibold tracking-[-0.03em]">
+                  {currentCatalog.promos[promoIndex]?.title}
+                </h2>
+
+                <p className="mt-2 text-[13px] text-white/80">
+                  {currentCatalog.promos[promoIndex]?.subtitle}
+                </p>
+
+                <button
+                  onClick={goToOrders}
+                  className="mt-5 inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-[12px] font-semibold text-[#101828]"
+                >
+                  Open orders
+                  <ChevronRight className="h-4 w-4" />
+                </button>
               </div>
-
-              <h2 className="mt-3 text-[24px] font-semibold tracking-[-0.03em]">
-                {currentCatalog.promos[promoIndex]?.title}
-              </h2>
-
-              <p className="mt-2 text-[13px] text-white/80">
-                {currentCatalog.promos[promoIndex]?.subtitle}
-              </p>
-
-              <button
-                onClick={goToOrders}
-                className="mt-5 inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-[12px] font-semibold text-[#101828]"
-              >
-                Open orders
-                <ChevronRight className="h-4 w-4" />
-              </button>
             </div>
           </div>
 
@@ -648,7 +727,6 @@ export default function PharmacyPage() {
         </div>
       </section>
 
-      {/* CATEGORIES INLINE */}
       <section className="mt-5 px-4">
         <div className="mb-3 flex items-center justify-between">
           <div>
@@ -697,7 +775,6 @@ export default function PharmacyPage() {
         </div>
       </section>
 
-      {/* QUICK INFO BAR */}
       <section className="mt-5 px-4">
         <div className="grid grid-cols-3 gap-3">
           <div className="rounded-[20px] border border-neutral-200 bg-white p-4">
@@ -729,7 +806,6 @@ export default function PharmacyPage() {
         </div>
       </section>
 
-      {/* MEDICINE SECTIONS */}
       <section className="mt-6 space-y-6">
         {visibleSections.map((section) => {
           if (!section.items.length) return null
@@ -764,16 +840,18 @@ export default function PharmacyPage() {
                     return (
                       <div
                         key={item.id}
-                        className="w-[170px] rounded-[24px] border border-neutral-200 bg-white p-3 shadow-[0_8px_22px_rgba(0,0,0,0.05)]"
+                        className="w-[184px] rounded-[24px] border border-neutral-200 bg-white p-3 shadow-[0_8px_22px_rgba(0,0,0,0.05)]"
                       >
                         <button
                           onClick={() => openProduct(item.id)}
                           className="block w-full text-left"
                         >
-                          <div className="relative flex h-[118px] items-center justify-center rounded-[20px] bg-gradient-to-br from-[#eff4ff] via-[#f8fbff] to-[#edf7f4]">
-                            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white shadow-sm">
-                              <Pill className="h-6 w-6 text-[#173ea5]" />
-                            </div>
+                          <div className="relative">
+                            <ProductImage
+                              src={item.image}
+                              alt={item.name}
+                              className="h-[126px] rounded-[20px]"
+                            />
 
                             {item.rx && (
                               <span className="absolute left-2 top-2 rounded-full bg-[#10214e] px-2 py-1 text-[9px] font-semibold text-white">
@@ -854,7 +932,6 @@ export default function PharmacyPage() {
         })}
       </section>
 
-      {/* EMPTY STATE */}
       {visibleSections.every((section) => section.items.length === 0) && (
         <section className="px-4 py-12">
           <div className="rounded-[28px] border border-dashed border-neutral-300 bg-white p-8 text-center">
@@ -871,7 +948,6 @@ export default function PharmacyPage() {
         </section>
       )}
 
-      {/* BOTTOM FLOATING CHECKOUT */}
       <div className="fixed inset-x-0 bottom-4 z-40 px-4">
         <div className="mx-auto flex max-w-xl items-center justify-between rounded-[24px] bg-[#101828] px-4 py-3 text-white shadow-[0_14px_34px_rgba(0,0,0,0.25)]">
           <div>
@@ -893,4 +969,4 @@ export default function PharmacyPage() {
       </div>
     </main>
   )
-        }
+}
