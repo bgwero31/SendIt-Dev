@@ -24,11 +24,19 @@ const STORE_NAME = "Alliance Pharmacy"
 const CART_KEY = `sendit_pharmacy_cart_${STORE_ID}`
 const FULFILLMENT_KEY = `sendit_pharmacy_fulfillment_${STORE_ID}`
 
+const RUNNER_FEE = 3
+const SERVICE_PERCENT = 0.05
+const SERVICE_CAP = 5
+
 function priceNumber(value) {
   if (typeof value === "number") return value
   if (!value) return 0
   const cleaned = String(value).replace(/[^0-9.]/g, "")
   return Number(cleaned || 0)
+}
+
+function createPickupCode() {
+  return `AP${Math.floor(100000 + Math.random() * 900000)}`
 }
 
 export default function PharmacyCheckoutPage() {
@@ -50,7 +58,7 @@ export default function PharmacyCheckoutPage() {
     address: "",
     orderNote: "",
     fulfillment: fulfillmentParam || "Delivery",
-    paymentMethod: "Cash on delivery",
+    paymentMethod: "EcoCash",
     pharmacy: STORE_NAME
   })
 
@@ -123,15 +131,20 @@ export default function PharmacyCheckoutPage() {
       0
     )
 
-    const serviceFee = subtotal > 10 ? Math.min(subtotal * 0.05, 5) : 0
-    const deliveryFee =
-      form.fulfillment === "Delivery" && subtotal > 0 ? 3.5 : 0
+    const serviceFee =
+      subtotal > 10 ? Math.min(subtotal * SERVICE_PERCENT, SERVICE_CAP) : 0
+
+    const runnerFee =
+      form.fulfillment === "Delivery" && subtotal > 0 ? RUNNER_FEE : 0
 
     return {
       subtotal,
       serviceFee,
-      deliveryFee,
-      total: subtotal + serviceFee + deliveryFee
+      runnerFee,
+      deliveryFee: runnerFee,
+      pharmacyAmount: subtotal,
+      platformAmount: serviceFee,
+      total: subtotal + serviceFee + runnerFee
     }
   }, [cartItems, form.fulfillment])
 
@@ -153,35 +166,82 @@ export default function PharmacyCheckoutPage() {
       setPlacingOrder(true)
 
       const orderRef = push(ref(db, `pharmacyOrders/${STORE_ID}`))
+      const orderId = orderRef.key
+      const pickupCode = createPickupCode()
+      const now = Date.now()
 
       await set(orderRef, {
+        orderId,
         storeId: STORE_ID,
         pharmacy: STORE_NAME,
+
         customerName: form.fullName,
+        customerPhone: form.phone,
         phone: form.phone,
+        customerCity: form.city,
         city: form.city,
+        customerAddress: form.fulfillment === "Delivery" ? form.address : "",
         address: form.fulfillment === "Delivery" ? form.address : "",
         orderNote: form.orderNote || "",
+
         fulfillment: form.fulfillment,
         paymentMethod: form.paymentMethod,
+
         items: cartItems,
         itemCount,
+
         subtotal: Number(totals.subtotal.toFixed(2)),
         serviceFee: Number(totals.serviceFee.toFixed(2)),
+        runnerFee: Number(totals.runnerFee.toFixed(2)),
         deliveryFee: Number(totals.deliveryFee.toFixed(2)),
+        pharmacyAmount: Number(totals.pharmacyAmount.toFixed(2)),
+        platformAmount: Number(totals.platformAmount.toFixed(2)),
         total: Number(totals.total.toFixed(2)),
-        status: "received",
-        createdAt: Date.now(),
-        updatedAt: Date.now()
+
+        paymentStatus: "awaiting_payment",
+        paymentReference: "",
+        paidConfirmedByPharmacy: false,
+        receiptNumber: "",
+
+        pickupCode,
+        pickupCodeUsed: false,
+
+        runnerNeeded: form.fulfillment === "Delivery",
+        runnerId: "",
+        runnerName: "",
+        runnerPhone: "",
+        runnerFeePaid: false,
+
+        status: "awaiting_payment",
+
+        timeline: {
+          createdAt: now,
+          paymentSubmittedAt: null,
+          paidConfirmedAt: null,
+          readyAt: null,
+          runnerAssignedAt: null,
+          pickedUpAt: null,
+          deliveredAt: null,
+          collectedAt: null,
+          completedAt: null
+        },
+
+        createdAt: now,
+        updatedAt: now
       })
 
       localStorage.removeItem(CART_KEY)
 
-      alert("Order placed successfully")
-      router.push(`/pharmacy/orders?store=${STORE_ID}&city=${encodeURIComponent(form.city)}`)
+      alert("Order created successfully")
+
+      router.push(
+        `/pharmacy/orders?store=${STORE_ID}&city=${encodeURIComponent(
+          form.city
+        )}&order=${orderId}`
+      )
     } catch (error) {
       console.error(error)
-      alert("Failed to place order")
+      alert("Failed to create order")
     } finally {
       setPlacingOrder(false)
     }
@@ -231,7 +291,7 @@ export default function PharmacyCheckoutPage() {
             </h1>
 
             <p className="mt-4 max-w-xl text-[14px] leading-6 text-white/85">
-              Add customer details, choose pickup or delivery, then submit the order directly to Alliance Pharmacy.
+              Confirm your details, choose pickup or delivery, and complete your pharmacy order.
             </p>
           </div>
         </div>
@@ -240,21 +300,7 @@ export default function PharmacyCheckoutPage() {
       <section className="relative z-20 -mt-5 px-4">
         <div className="mx-auto grid max-w-7xl gap-5 xl:grid-cols-[1.15fr_0.85fr]">
           <div className="space-y-5">
-            <div className="rounded-[32px] border border-emerald-100 bg-white p-5 shadow-[0_16px_40px_rgba(4,120,87,0.08)]">
-              <div className="mb-4 flex items-start gap-3">
-                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-50">
-                  <User className="h-5 w-5 text-emerald-700" />
-                </div>
-                <div>
-                  <p className="text-[18px] font-black tracking-[-0.03em] text-neutral-900">
-                    Customer details
-                  </p>
-                  <p className="mt-1 text-[12px] text-neutral-500">
-                    Who is placing this order?
-                  </p>
-                </div>
-              </div>
-
+            <Card icon={User} title="Customer details" subtitle="Who is placing this order?">
               <div className="grid gap-4 md:grid-cols-2">
                 <InputBox
                   label="Full name"
@@ -270,23 +316,9 @@ export default function PharmacyCheckoutPage() {
                   placeholder="Enter your phone number"
                 />
               </div>
-            </div>
+            </Card>
 
-            <div className="rounded-[32px] border border-emerald-100 bg-white p-5 shadow-[0_16px_40px_rgba(4,120,87,0.08)]">
-              <div className="mb-4 flex items-start gap-3">
-                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-50">
-                  <Truck className="h-5 w-5 text-emerald-700" />
-                </div>
-                <div>
-                  <p className="text-[18px] font-black tracking-[-0.03em] text-neutral-900">
-                    Fulfillment
-                  </p>
-                  <p className="mt-1 text-[12px] text-neutral-500">
-                    Delivery adds $3.50. Pickup is free.
-                  </p>
-                </div>
-              </div>
-
+            <Card icon={Truck} title="Fulfillment" subtitle="Choose how you want to receive your order.">
               <div className="grid gap-3 md:grid-cols-2">
                 {["Delivery", "Pickup"].map((option) => {
                   const active = form.fulfillment === option
@@ -306,8 +338,8 @@ export default function PharmacyCheckoutPage() {
                       </p>
                       <p className="mt-1 text-[11px] leading-5 text-neutral-500">
                         {option === "Delivery"
-                          ? "Deliver to customer address through SendIt."
-                          : "Customer collects directly from Alliance Pharmacy."}
+                          ? "Have your order delivered to your address."
+                          : "Collect directly from Alliance Pharmacy."}
                       </p>
                     </button>
                   )
@@ -343,23 +375,9 @@ export default function PharmacyCheckoutPage() {
                   }
                 />
               </div>
-            </div>
+            </Card>
 
-            <div className="rounded-[32px] border border-emerald-100 bg-white p-5 shadow-[0_16px_40px_rgba(4,120,87,0.08)]">
-              <div className="mb-4 flex items-start gap-3">
-                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-50">
-                  <Wallet className="h-5 w-5 text-emerald-700" />
-                </div>
-                <div>
-                  <p className="text-[18px] font-black tracking-[-0.03em] text-neutral-900">
-                    Payment and note
-                  </p>
-                  <p className="mt-1 text-[12px] text-neutral-500">
-                    Choose payment method and add instructions.
-                  </p>
-                </div>
-              </div>
-
+            <Card icon={Wallet} title="Payment and note" subtitle="Choose payment method and add instructions.">
               <div className="grid gap-4 md:grid-cols-2">
                 <div>
                   <p className="mb-2 text-[11px] font-black text-neutral-500">
@@ -370,10 +388,10 @@ export default function PharmacyCheckoutPage() {
                     onChange={(e) => updateField("paymentMethod", e.target.value)}
                     className="w-full rounded-[18px] border border-neutral-200 bg-[#f8fafc] px-4 py-3 text-[13px] text-neutral-900 outline-none"
                   >
-                    <option>Cash on delivery</option>
+                    <option>EcoCash</option>
+                    <option>OneMoney</option>
+                    <option>InnBucks</option>
                     <option>Cash on pickup</option>
-                    <option>Mobile money</option>
-                    <option>Card payment</option>
                   </select>
                 </div>
               </div>
@@ -390,23 +408,9 @@ export default function PharmacyCheckoutPage() {
                   className="w-full rounded-[18px] border border-neutral-200 bg-[#f8fafc] px-4 py-3 text-[13px] text-neutral-900 outline-none"
                 />
               </div>
-            </div>
+            </Card>
 
-            <div className="rounded-[32px] border border-emerald-100 bg-white p-5 shadow-[0_16px_40px_rgba(4,120,87,0.08)]">
-              <div className="mb-4 flex items-center justify-between">
-                <div>
-                  <p className="text-[18px] font-black tracking-[-0.03em] text-neutral-900">
-                    Order items
-                  </p>
-                  <p className="mt-1 text-[12px] text-neutral-500">
-                    Pulled from Alliance cart.
-                  </p>
-                </div>
-                <span className="rounded-full bg-emerald-50 px-3 py-1 text-[11px] font-black text-emerald-700">
-                  {itemCount} item(s)
-                </span>
-              </div>
-
+            <Card icon={ShoppingBag} title="Order items" subtitle="Review your selected items.">
               <div className="space-y-3">
                 {cartItems.length === 0 ? (
                   <div className="rounded-[24px] border border-dashed border-emerald-200 bg-emerald-50/40 p-8 text-center">
@@ -457,7 +461,7 @@ export default function PharmacyCheckoutPage() {
                   ))
                 )}
               </div>
-            </div>
+            </Card>
           </div>
 
           <div className="space-y-5">
@@ -474,29 +478,16 @@ export default function PharmacyCheckoutPage() {
 
               <div className="mt-5 space-y-3">
                 <SummaryRow label="Items subtotal" value={`$${totals.subtotal.toFixed(2)}`} />
+                <SummaryRow label="Service fee" value={`$${totals.serviceFee.toFixed(2)}`} />
                 <SummaryRow
-                  label="Service fee"
-                  value={`$${totals.serviceFee.toFixed(2)}`}
-                />
-                <SummaryRow
-                  label={`${form.fulfillment} fee`}
+                  label={form.fulfillment === "Delivery" ? "Delivery fee" : "Pickup fee"}
                   value={`$${totals.deliveryFee.toFixed(2)}`}
                 />
               </div>
 
-              <div className="mt-5 rounded-[24px] border border-emerald-100 bg-emerald-50/60 p-4">
-                <p className="text-[11px] font-black text-emerald-700">
-                  Service fee rule
-                </p>
-                <p className="mt-1 text-[11px] leading-5 text-neutral-600">
-                  Below $10 = $0.00. Above $10 = 5% of subtotal, capped at $5.00.
-                  Delivery adds $3.50.
-                </p>
-              </div>
-
               <div className="mt-5 flex items-center justify-between border-t border-emerald-100 pt-5">
                 <span className="text-[15px] font-black text-neutral-900">
-                  Total
+                  Total to pay
                 </span>
                 <span className="text-[30px] font-black tracking-[-0.06em] text-emerald-800">
                   ${totals.total.toFixed(2)}
@@ -517,7 +508,7 @@ export default function PharmacyCheckoutPage() {
                 ) : (
                   <ChevronRight className="h-4 w-4" />
                 )}
-                {placingOrder ? "Placing order..." : "Place order"}
+                {placingOrder ? "Creating order..." : "Create order"}
               </button>
 
               {!isReady && (
@@ -533,10 +524,10 @@ export default function PharmacyCheckoutPage() {
                   </div>
                   <div>
                     <p className="text-[13px] font-black text-neutral-900">
-                      Saves to Alliance admin
+                      Secure order process
                     </p>
                     <p className="mt-1 text-[11px] leading-5 text-neutral-500">
-                      This order goes to pharmacyOrders/alliance-pharmacy for the owner dashboard.
+                      After creating your order, follow the payment instructions on the next page.
                     </p>
                   </div>
                 </div>
@@ -547,10 +538,10 @@ export default function PharmacyCheckoutPage() {
                   <ShieldCheck className="h-5 w-5 text-emerald-700" />
                 </div>
                 <p className="mt-3 text-[13px] font-black text-neutral-900">
-                  Verified checkout flow
+                  Verified pharmacy order
                 </p>
                 <p className="mt-1 text-[11px] leading-5 text-neutral-500">
-                  Products, prices and images come from Firebase. Final order is stored live.
+                  Your order will be reviewed and prepared by Alliance Pharmacy.
                 </p>
               </div>
             </div>
@@ -558,6 +549,26 @@ export default function PharmacyCheckoutPage() {
         </div>
       </section>
     </main>
+  )
+}
+
+function Card({ icon: Icon, title, subtitle, children }) {
+  return (
+    <div className="rounded-[32px] border border-emerald-100 bg-white p-5 shadow-[0_16px_40px_rgba(4,120,87,0.08)]">
+      <div className="mb-4 flex items-start gap-3">
+        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-50">
+          <Icon className="h-5 w-5 text-emerald-700" />
+        </div>
+        <div>
+          <p className="text-[18px] font-black tracking-[-0.03em] text-neutral-900">
+            {title}
+          </p>
+          <p className="mt-1 text-[12px] text-neutral-500">{subtitle}</p>
+        </div>
+      </div>
+
+      {children}
+    </div>
   )
 }
 
