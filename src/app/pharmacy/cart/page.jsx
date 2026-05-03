@@ -151,8 +151,8 @@ export default function AllianceCartPage() {
       0
     )
 
-    const serviceFee = subtotal > 0 ? 1.5 : 0
-    const deliveryFee = fulfillment === "Delivery" && subtotal > 0 ? 2.5 : 0
+    const serviceFee = subtotal > 10 ? Math.min(subtotal * 0.05, 5) : 0
+    const deliveryFee = fulfillment === "Delivery" && subtotal > 0 ? 3.5 : 0
     const total = subtotal + serviceFee + deliveryFee
 
     return { subtotal, serviceFee, deliveryFee, total }
@@ -165,10 +165,7 @@ export default function AllianceCartPage() {
   }
 
   const goCheckout = () => {
-    localStorage.setItem(
-      `sendit_pharmacy_fulfillment_${STORE_ID}`,
-      fulfillment
-    )
+    localStorage.setItem(`sendit_pharmacy_fulfillment_${STORE_ID}`, fulfillment)
 
     router.push(
       `/pharmacy/checkout?store=${STORE_ID}&city=${encodeURIComponent(
@@ -382,8 +379,8 @@ export default function AllianceCartPage() {
                       </p>
                       <p className="mt-1 text-[11px] leading-5 text-neutral-500">
                         {option === "Delivery"
-                          ? "Get it brought to your address through SendIt."
-                          : "Collect directly from Alliance Pharmacy."}
+                          ? "Get it brought to your address through SendIt. Delivery fee is $3.50."
+                          : "Collect directly from Alliance Pharmacy. Pickup is free."}
                       </p>
                     </button>
                   )
@@ -411,6 +408,16 @@ export default function AllianceCartPage() {
                   label={`${fulfillment} fee`}
                   value={`$${totals.deliveryFee.toFixed(2)}`}
                 />
+              </div>
+
+              <div className="mt-5 rounded-[24px] border border-emerald-100 bg-emerald-50/60 p-4">
+                <p className="text-[11px] font-black text-emerald-700">
+                  Fee rule
+                </p>
+                <p className="mt-1 text-[11px] leading-5 text-neutral-600">
+                  Service fee is $0.00 below $10. Above $10 it becomes 5% of subtotal,
+                  capped at $5.00. Delivery adds $3.50.
+                </p>
               </div>
 
               <div className="mt-5 flex items-center justify-between border-t border-emerald-100 pt-5">
@@ -446,7 +453,7 @@ export default function AllianceCartPage() {
                 <InfoCard
                   icon={Truck}
                   title="Delivery or pickup"
-                  text="Choose how the customer receives the medicine."
+                  text="Delivery fee is $3.50. Pickup is free."
                 />
                 <InfoCard
                   icon={ShieldCheck}
