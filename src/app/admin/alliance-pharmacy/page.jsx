@@ -24,7 +24,11 @@ import {
   Upload,
   Trash2,
   PackageCheck,
-  Sparkles
+  Sparkles,
+  Truck,
+  ReceiptText,
+  KeyRound,
+  Wallet
 } from "lucide-react"
 
 import { ref, set, push, onValue, remove, update } from "firebase/database"
@@ -33,9 +37,19 @@ import { uploadToImgbb } from "../../../lib/uploadToImgbb"
 
 const ALLIANCE_ID = "alliance-pharmacy"
 
+function money(value) {
+  return `$${Number(value || 0).toFixed(2)}`
+}
+
+function orderCode(id = "") {
+  return id ? `AP-${id.slice(-6).toUpperCase()}` : "AP-ORDER"
+}
+
 export default function AlliancePharmacyAdminPage() {
   const [activeTab, setActiveTab] = useState("dashboard")
   const [search, setSearch] = useState("")
+  const [receiptInputs, setReceiptInputs] = useState({})
+  const [savingOrderId, setSavingOrderId] = useState("")
 
   const [profile, setProfile] = useState({
     pharmacyName: "Alliance Pharmacy",
@@ -110,7 +124,11 @@ export default function AlliancePharmacyAdminPage() {
 
     const unsubOrders = onValue(ref(db, `pharmacyOrders/${ALLIANCE_ID}`), (snap) => {
       const data = snap.val() || {}
-      setOrders(Object.entries(data).map(([id, value]) => ({ id, ...value })).reverse())
+      setOrders(
+        Object.entries(data)
+          .map(([id, value]) => ({ id, ...value }))
+          .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0))
+      )
     })
 
     const unsubPrescriptions = onValue(ref(db, `pharmacyPrescriptions/${ALLIANCE_ID}`), (snap) => {
@@ -301,6 +319,104 @@ export default function AlliancePharmacyAdminPage() {
     })
   }
 
+  const confirmPaidWithReceipt = async (order) => {
+    const receiptNumber = (receiptInputs[order.id] || "").trim()
+
+    if (!receiptNumber) {
+      alert("Enter receipt number first")
+      return
+    }
+
+    try {
+      setSavingOrderId(order.id)
+
+      await update(ref(db, `pharmacyOrders/${ALLIANCE_ID}/${order.id}`), {
+        paymentStatus: "paid",
+        paidConfirmedByPharmacy: true,
+        receiptNumber,
+        status: "paid_ready_for_pickup",
+        "timeline/paidConfirmedAt": Date.now(),
+        "timeline/readyAt": Date.now(),
+        updatedAt: Date.now()
+      })
+
+      alert("Payment confirmed and receipt saved")
+    } catch (error) {
+      console.error(error)
+      alert("Failed to confirm payment")
+    } finally {
+      setSavingOrderId("")
+    }
+  }
+
+  const markReadyForRunner = async (order) => {
+    if (order.fulfillment !== "Delivery") {
+      alert("This is not a delivery order")
+      return
+    }
+
+    if (!order.paidConfirmedByPharmacy) {
+      alert("Confirm payment first")
+      return
+    }
+
+    try {
+      setSavingOrderId(order.id)
+
+      const taskRef = push(ref(db, `tasks/${order.city || "Harare"}`))
+
+      await set(taskRef, {
+        type: "pharmacy_delivery",
+        pharmacyOrderId: order.id,
+        storeId: ALLIANCE_ID,
+        pickupName: "Alliance Pharmacy",
+        pickupAddress: "Alliance Pharmacy",
+        dropoffAddress: order.address || order.customerAddress || "",
+        customerName: order.customerName || "",
+        customerPhone: order.phone || order.customerPhone || "",
+        city: order.city || "Harare",
+        runnerFee: order.runnerFee || 3,
+        pickupCodeRequired: true,
+        status: "waiting_for_runner",
+        createdAt: Date.now(),
+        updatedAt: Date.now()
+      })
+
+      await update(ref(db, `pharmacyOrders/${ALLIANCE_ID}/${order.id}`), {
+        status: "runner_assigned",
+        runnerTaskId: taskRef.key,
+        "timeline/runnerAssignedAt": Date.now(),
+        updatedAt: Date.now()
+      })
+
+      alert("Runner task created")
+    } catch (error) {
+      console.error(error)
+      alert("Failed to create runner task")
+    } finally {
+      setSavingOrderId("")
+    }
+  }
+
+  const confirmCustomerCollected = async (order) => {
+    if (!order.paidConfirmedByPharmacy) {
+      alert("Confirm payment first")
+      return
+    }
+
+    if (!confirm("Confirm customer collected this order?")) return
+
+    await update(ref(db, `pharmacyOrders/${ALLIANCE_ID}/${order.id}`), {
+      status: "completed",
+      collectionStatus: "collected_by_customer",
+      "timeline/collectedAt": Date.now(),
+      "timeline/completedAt": Date.now(),
+      updatedAt: Date.now()
+    })
+
+    alert("Order marked completed")
+  }
+
   const updatePrescriptionStatus = async (id, status) => {
     await update(ref(db, `pharmacyPrescriptions/${ALLIANCE_ID}/${id}`), {
       status,
@@ -419,8 +535,7 @@ export default function AlliancePharmacyAdminPage() {
               </h1>
 
               <p className="mt-5 max-w-2xl text-[15px] leading-6 text-white/85">
-                Manage your products, prices, promo banners, customer requests,
-                prescriptions and orders from one premium green dashboard.
+                Manage products, promos, payments, receipt numbers, pickup codes, delivery orders and customer collections.
               </p>
 
               <div className="mt-5 flex flex-wrap gap-2 text-[11px] font-bold text-white/90">
@@ -468,18 +583,9 @@ export default function AlliancePharmacyAdminPage() {
                 </div>
 
                 <div className="mt-5 grid grid-cols-3 gap-2">
-                  <div className="rounded-2xl bg-emerald-50 p-3">
-                    <p className="text-[10px] font-black text-emerald-700">Products</p>
-                    <p className="text-[22px] font-black">{products.length}</p>
-                  </div>
-                  <div className="rounded-2xl bg-emerald-50 p-3">
-                    <p className="text-[10px] font-black text-emerald-700">Promos</p>
-                    <p className="text-[22px] font-black">{promos.length}</p>
-                  </div>
-                  <div className="rounded-2xl bg-emerald-50 p-3">
-                    <p className="text-[10px] font-black text-emerald-700">Orders</p>
-                    <p className="text-[22px] font-black">{orders.length}</p>
-                  </div>
+                  <MiniStat label="Products" value={products.length} />
+                  <MiniStat label="Promos" value={promos.length} />
+                  <MiniStat label="Orders" value={orders.length} />
                 </div>
               </div>
             </div>
@@ -487,7 +593,6 @@ export default function AlliancePharmacyAdminPage() {
         </div>
       </section>
 
-      {/* rest of dashboard is based on your current admin file, but locked to Alliance Pharmacy only */}
       <section className="relative z-20 -mt-5 px-4">
         <div className="mx-auto max-w-7xl space-y-5">
           <div className="rounded-[30px] border border-emerald-100 bg-white p-4 shadow-[0_16px_38px_rgba(4,120,87,0.08)]">
@@ -533,7 +638,7 @@ export default function AlliancePharmacyAdminPage() {
                 {[
                   ["products", "Add medicines", "Upload products, prices, stock and images.", Pill],
                   ["promos", "Promos & banners", "Update the public Alliance hero carousel.", ImageIcon],
-                  ["orders", "Manage orders", "Mark orders as preparing, ready or completed.", ShoppingBag]
+                  ["orders", "Manage orders", "Confirm payments, receipts, pickup codes and runner handoff.", ShoppingBag]
                 ].map(([id, title, text, Icon]) => (
                   <button
                     key={id}
@@ -557,50 +662,14 @@ export default function AlliancePharmacyAdminPage() {
                 <p className="text-[22px] font-black tracking-[-0.04em] text-neutral-900">
                   Alliance Pharmacy profile
                 </p>
-                <p className="mt-1 text-[12px] text-neutral-500">
-                  This saves to Firebase path: pharmacies/alliance-pharmacy
-                </p>
 
                 <div className="mt-5 grid gap-4 md:grid-cols-2">
-                  <input
-                    value="Alliance Pharmacy"
-                    disabled
-                    className="w-full rounded-[18px] border border-emerald-100 bg-emerald-50 px-4 py-3 text-[13px] font-black text-emerald-900"
-                  />
-
-                  <input
-                    value={ALLIANCE_ID}
-                    disabled
-                    className="w-full rounded-[18px] border border-emerald-100 bg-emerald-50 px-4 py-3 text-[13px] font-black text-emerald-900"
-                  />
-
-                  <input
-                    value={profile.ownerName}
-                    onChange={(e) => setProfile((p) => ({ ...p, ownerName: e.target.value }))}
-                    placeholder="Owner full name"
-                    className="w-full rounded-[18px] border border-neutral-200 bg-[#f8fafc] px-4 py-3 text-[13px] outline-none"
-                  />
-
-                  <input
-                    value={profile.phone}
-                    onChange={(e) => setProfile((p) => ({ ...p, phone: e.target.value }))}
-                    placeholder="+263..."
-                    className="w-full rounded-[18px] border border-neutral-200 bg-[#f8fafc] px-4 py-3 text-[13px] outline-none"
-                  />
-
-                  <input
-                    value={profile.city}
-                    onChange={(e) => setProfile((p) => ({ ...p, city: e.target.value }))}
-                    placeholder="Harare"
-                    className="w-full rounded-[18px] border border-neutral-200 bg-[#f8fafc] px-4 py-3 text-[13px] outline-none"
-                  />
-
-                  <input
-                    value={profile.eta}
-                    onChange={(e) => setProfile((p) => ({ ...p, eta: e.target.value }))}
-                    placeholder="18–35 min"
-                    className="w-full rounded-[18px] border border-neutral-200 bg-[#f8fafc] px-4 py-3 text-[13px] outline-none"
-                  />
+                  <input value="Alliance Pharmacy" disabled className="w-full rounded-[18px] border border-emerald-100 bg-emerald-50 px-4 py-3 text-[13px] font-black text-emerald-900" />
+                  <input value={ALLIANCE_ID} disabled className="w-full rounded-[18px] border border-emerald-100 bg-emerald-50 px-4 py-3 text-[13px] font-black text-emerald-900" />
+                  <input value={profile.ownerName} onChange={(e) => setProfile((p) => ({ ...p, ownerName: e.target.value }))} placeholder="Owner full name" className="w-full rounded-[18px] border border-neutral-200 bg-[#f8fafc] px-4 py-3 text-[13px] outline-none" />
+                  <input value={profile.phone} onChange={(e) => setProfile((p) => ({ ...p, phone: e.target.value }))} placeholder="+263..." className="w-full rounded-[18px] border border-neutral-200 bg-[#f8fafc] px-4 py-3 text-[13px] outline-none" />
+                  <input value={profile.city} onChange={(e) => setProfile((p) => ({ ...p, city: e.target.value }))} placeholder="Harare" className="w-full rounded-[18px] border border-neutral-200 bg-[#f8fafc] px-4 py-3 text-[13px] outline-none" />
+                  <input value={profile.eta} onChange={(e) => setProfile((p) => ({ ...p, eta: e.target.value }))} placeholder="18–35 min" className="w-full rounded-[18px] border border-neutral-200 bg-[#f8fafc] px-4 py-3 text-[13px] outline-none" />
                 </div>
 
                 <textarea
@@ -612,31 +681,19 @@ export default function AlliancePharmacyAdminPage() {
                 />
 
                 <div className="mt-4 grid gap-4 md:grid-cols-2">
-                  <UploadInput
-                    label="Alliance logo"
-                    loadingKey="logo"
-                    onFile={async (file) => {
-                      const url = await handleImageUpload(file, "logo")
-                      if (url) setProfile((p) => ({ ...p, logo: url }))
-                    }}
-                  />
+                  <UploadInput label="Alliance logo" loadingKey="logo" onFile={async (file) => {
+                    const url = await handleImageUpload(file, "logo")
+                    if (url) setProfile((p) => ({ ...p, logo: url }))
+                  }} />
 
-                  <UploadInput
-                    label="Alliance cover image"
-                    loadingKey="cover"
-                    onFile={async (file) => {
-                      const url = await handleImageUpload(file, "cover")
-                      if (url) setProfile((p) => ({ ...p, coverImage: url }))
-                    }}
-                  />
+                  <UploadInput label="Alliance cover image" loadingKey="cover" onFile={async (file) => {
+                    const url = await handleImageUpload(file, "cover")
+                    if (url) setProfile((p) => ({ ...p, coverImage: url }))
+                  }} />
                 </div>
 
                 <label className="mt-5 flex items-center gap-3 text-[13px] font-black text-neutral-800">
-                  <input
-                    type="checkbox"
-                    checked={profile.isOpen}
-                    onChange={(e) => setProfile((p) => ({ ...p, isOpen: e.target.checked }))}
-                  />
+                  <input type="checkbox" checked={profile.isOpen} onChange={(e) => setProfile((p) => ({ ...p, isOpen: e.target.checked }))} />
                   Pharmacy is open
                 </label>
 
@@ -652,20 +709,12 @@ export default function AlliancePharmacyAdminPage() {
 
               <div className="overflow-hidden rounded-[32px] bg-white shadow-[0_14px_35px_rgba(4,120,87,0.08)]">
                 <div className="relative h-[280px] bg-gradient-to-br from-emerald-900 via-emerald-700 to-white">
-                  {profile.coverImage ? (
-                    <img src={profile.coverImage} alt="Cover" className="h-full w-full object-cover opacity-30" />
-                  ) : null}
+                  {profile.coverImage ? <img src={profile.coverImage} alt="Cover" className="h-full w-full object-cover opacity-30" /> : null}
                   <div className="absolute inset-0 p-6 text-white">
                     <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-[26px] bg-white/20 backdrop-blur-xl">
-                      {profile.logo ? (
-                        <img src={profile.logo} alt="Logo" className="h-full w-full object-cover" />
-                      ) : (
-                        <Store className="h-9 w-9" />
-                      )}
+                      {profile.logo ? <img src={profile.logo} alt="Logo" className="h-full w-full object-cover" /> : <Store className="h-9 w-9" />}
                     </div>
-                    <p className="mt-5 text-[32px] font-black tracking-[-0.05em]">
-                      ALLIANCE PHARMACY
-                    </p>
+                    <p className="mt-5 text-[32px] font-black tracking-[-0.05em]">ALLIANCE PHARMACY</p>
                     <p className="mt-2 text-[13px] text-white/85">{profile.tagline}</p>
                   </div>
                 </div>
@@ -680,21 +729,13 @@ export default function AlliancePharmacyAdminPage() {
 
                 <div className="mt-4 space-y-3">
                   {filteredProducts.length === 0 ? (
-                    <div className="rounded-[24px] border border-dashed border-emerald-200 bg-emerald-50/40 p-8 text-center">
-                      <p className="font-black text-neutral-900">No products yet</p>
-                    </div>
+                    <EmptyBox text="No products yet" />
                   ) : (
                     filteredProducts.map((item) => (
                       <div key={item.id} className="rounded-[24px] border border-neutral-200 p-4">
                         <div className="flex gap-4">
                           <div className="h-20 w-20 overflow-hidden rounded-[18px] bg-emerald-50">
-                            {item.image ? (
-                              <img src={item.image} alt={item.name} className="h-full w-full object-cover" />
-                            ) : (
-                              <div className="flex h-full w-full items-center justify-center">
-                                <Pill className="h-6 w-6 text-emerald-700" />
-                              </div>
-                            )}
+                            {item.image ? <img src={item.image} alt={item.name} className="h-full w-full object-cover" /> : <div className="flex h-full w-full items-center justify-center"><Pill className="h-6 w-6 text-emerald-700" /></div>}
                           </div>
                           <div className="flex-1">
                             <div className="flex justify-between gap-3">
@@ -707,10 +748,7 @@ export default function AlliancePharmacyAdminPage() {
                                 <p className="mt-1 text-[11px] text-neutral-500">{item.stock}</p>
                               </div>
                             </div>
-                            <button
-                              onClick={() => deleteProduct(item.id)}
-                              className="mt-3 inline-flex items-center gap-1 rounded-full bg-red-50 px-3 py-1 text-[10px] font-black text-red-600"
-                            >
+                            <button onClick={() => deleteProduct(item.id)} className="mt-3 inline-flex items-center gap-1 rounded-full bg-red-50 px-3 py-1 text-[10px] font-black text-red-600">
                               <Trash2 className="h-3 w-3" />
                               Delete
                             </button>
@@ -753,14 +791,10 @@ export default function AlliancePharmacyAdminPage() {
 
                   <textarea rows={3} value={productForm.description} onChange={(e) => setProductForm((p) => ({ ...p, description: e.target.value }))} placeholder="Description" className="rounded-[18px] border border-neutral-200 bg-[#f8fafc] px-4 py-3 text-[13px] outline-none" />
 
-                  <UploadInput
-                    label="Product image"
-                    loadingKey="product"
-                    onFile={async (file) => {
-                      const url = await handleImageUpload(file, "product")
-                      if (url) setProductForm((p) => ({ ...p, image: url }))
-                    }}
-                  />
+                  <UploadInput label="Product image" loadingKey="product" onFile={async (file) => {
+                    const url = await handleImageUpload(file, "product")
+                    if (url) setProductForm((p) => ({ ...p, image: url }))
+                  }} />
 
                   <label className="flex items-center gap-3 text-[13px] font-black">
                     <input type="checkbox" checked={productForm.rx} onChange={(e) => setProductForm((p) => ({ ...p, rx: e.target.checked }))} />
@@ -780,11 +814,10 @@ export default function AlliancePharmacyAdminPage() {
             <div className="grid gap-5 xl:grid-cols-2">
               <div className="rounded-[32px] bg-white p-5 shadow-[0_14px_35px_rgba(4,120,87,0.08)]">
                 <p className="text-[20px] font-black text-neutral-900">Alliance promos</p>
+
                 <div className="mt-4 space-y-3">
                   {promos.length === 0 ? (
-                    <div className="rounded-[24px] border border-dashed border-emerald-200 bg-emerald-50/40 p-8 text-center">
-                      <p className="font-black text-neutral-900">No promos yet</p>
-                    </div>
+                    <EmptyBox text="No promos yet" />
                   ) : (
                     promos.map((item) => (
                       <div key={item.id} className="overflow-hidden rounded-[24px] border border-neutral-200">
@@ -810,14 +843,10 @@ export default function AlliancePharmacyAdminPage() {
                   <input value={promoForm.subtitle} onChange={(e) => setPromoForm((p) => ({ ...p, subtitle: e.target.value }))} placeholder="Subtitle" className="rounded-[18px] border border-neutral-200 bg-[#f8fafc] px-4 py-3 text-[13px] outline-none" />
                   <input value={promoForm.tag} onChange={(e) => setPromoForm((p) => ({ ...p, tag: e.target.value }))} placeholder="Tag e.g. Fresh offers" className="rounded-[18px] border border-neutral-200 bg-[#f8fafc] px-4 py-3 text-[13px] outline-none" />
 
-                  <UploadInput
-                    label="Promo image"
-                    loadingKey="promo"
-                    onFile={async (file) => {
-                      const url = await handleImageUpload(file, "promo")
-                      if (url) setPromoForm((p) => ({ ...p, image: url }))
-                    }}
-                  />
+                  <UploadInput label="Promo image" loadingKey="promo" onFile={async (file) => {
+                    const url = await handleImageUpload(file, "promo")
+                    if (url) setPromoForm((p) => ({ ...p, image: url }))
+                  }} />
 
                   <button onClick={savePromo} disabled={savingPromo} className="inline-flex items-center justify-center gap-2 rounded-full bg-emerald-700 px-5 py-3 text-[13px] font-black text-white">
                     {savingPromo ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
@@ -829,20 +858,136 @@ export default function AlliancePharmacyAdminPage() {
           )}
 
           {activeTab === "orders" && (
-            <ListPanel
-              title="Alliance orders"
-              empty="No orders yet"
-              items={orders}
-              action={(item) => (
-                <div className="flex flex-wrap gap-2">
-                  {["received", "preparing", "ready", "completed"].map((status) => (
-                    <button key={status} onClick={() => updateOrderStatus(item.id, status)} className="rounded-full bg-emerald-50 px-3 py-1 text-[10px] font-black text-emerald-700">
-                      {status}
-                    </button>
-                  ))}
+            <div className="grid gap-5">
+              <div className="rounded-[32px] bg-white p-5 shadow-[0_14px_35px_rgba(4,120,87,0.08)]">
+                <p className="text-[20px] font-black text-neutral-900">
+                  Alliance Pharmacy orders
+                </p>
+                <p className="mt-1 text-[12px] text-neutral-500">
+                  Confirm payment, save receipt number, prepare pickup, create runner delivery, or complete customer collection.
+                </p>
+
+                <div className="mt-5 space-y-4">
+                  {orders.length === 0 ? (
+                    <EmptyBox text="No orders yet" />
+                  ) : (
+                    orders.map((order) => (
+                      <div key={order.id} className="rounded-[28px] border border-emerald-100 bg-white p-5 shadow-sm">
+                        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                          <div className="flex-1">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <PillLabel text={orderCode(order.id)} green />
+                              <PillLabel text={order.status || "awaiting_payment"} />
+                              <PillLabel text={order.fulfillment || "Order"} />
+                              <PillLabel text={order.paymentStatus || "awaiting_payment"} />
+                            </div>
+
+                            <p className="mt-4 text-[16px] font-black text-neutral-900">
+                              {order.customerName || "Customer"}
+                            </p>
+                            <p className="mt-1 text-[12px] text-neutral-500">
+                              {order.phone || order.customerPhone || "No phone"} • {order.city || "Harare"}
+                            </p>
+
+                            {order.address && (
+                              <p className="mt-2 text-[12px] text-neutral-600">
+                                Delivery address: {order.address}
+                              </p>
+                            )}
+
+                            <div className="mt-4 rounded-[22px] bg-[#f8fafc] p-4">
+                              <p className="text-[12px] font-black text-neutral-900">Items bought</p>
+                              <div className="mt-3 space-y-2">
+                                {(order.items || []).map((item) => (
+                                  <div key={item.id} className="flex items-center justify-between gap-3 text-[12px]">
+                                    <span className="text-neutral-600">{item.qty} × {item.name}</span>
+                                    <span className="font-black text-neutral-900">
+                                      {money(Number(item.price || 0) * Number(item.qty || 1))}
+                                    </span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+
+                            <div className="mt-4 grid gap-3 md:grid-cols-4">
+                              <MoneyBox label="Items" value={order.subtotal} />
+                              <MoneyBox label="Service" value={order.serviceFee} />
+                              <MoneyBox label="Runner" value={order.runnerFee || order.deliveryFee} />
+                              <MoneyBox label="Total" value={order.total} strong />
+                            </div>
+
+                            {order.paymentReference && (
+                              <InfoBox icon={Wallet} title="Payment reference" text={order.paymentReference} blue />
+                            )}
+
+                            {order.receiptNumber && (
+                              <InfoBox icon={ReceiptText} title="Receipt number" text={order.receiptNumber} />
+                            )}
+
+                            {order.pickupCode && (
+                              <InfoBox icon={KeyRound} title="Pickup code" text={order.pickupCode} large />
+                            )}
+                          </div>
+
+                          <div className="w-full space-y-3 lg:w-[330px]">
+                            <input
+                              value={receiptInputs[order.id] || ""}
+                              onChange={(e) =>
+                                setReceiptInputs((prev) => ({
+                                  ...prev,
+                                  [order.id]: e.target.value
+                                }))
+                              }
+                              placeholder="Enter pharmacy receipt number"
+                              className="w-full rounded-[18px] border border-neutral-200 bg-[#f8fafc] px-4 py-3 text-[13px] outline-none"
+                            />
+
+                            <button
+                              onClick={() => confirmPaidWithReceipt(order)}
+                              disabled={savingOrderId === order.id || order.paymentStatus === "paid"}
+                              className="flex w-full items-center justify-center gap-2 rounded-full bg-emerald-700 px-5 py-3 text-[13px] font-black text-white disabled:bg-neutral-300"
+                            >
+                              {savingOrderId === order.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+                              Confirm paid + save receipt
+                            </button>
+
+                            {order.fulfillment === "Delivery" && (
+                              <button
+                                onClick={() => markReadyForRunner(order)}
+                                disabled={savingOrderId === order.id || !order.paidConfirmedByPharmacy}
+                                className="flex w-full items-center justify-center gap-2 rounded-full border border-emerald-100 px-5 py-3 text-[13px] font-black text-emerald-800 disabled:bg-neutral-100 disabled:text-neutral-400"
+                              >
+                                <Truck className="h-4 w-4" />
+                                Ready for runner
+                              </button>
+                            )}
+
+                            {order.fulfillment === "Pickup" && (
+                              <button
+                                onClick={() => confirmCustomerCollected(order)}
+                                disabled={!order.paidConfirmedByPharmacy}
+                                className="flex w-full items-center justify-center gap-2 rounded-full border border-emerald-100 px-5 py-3 text-[13px] font-black text-emerald-800 disabled:bg-neutral-100 disabled:text-neutral-400"
+                              >
+                                <PackageCheck className="h-4 w-4" />
+                                Confirm customer collected
+                              </button>
+                            )}
+
+                            <button
+                              onClick={() => updateOrderStatus(order.id, "cancelled")}
+                              className="flex w-full items-center justify-center gap-2 rounded-full bg-red-50 px-5 py-3 text-[13px] font-black text-red-600"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                              Cancel order
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
                 </div>
-              )}
-            />
+              </div>
+            </div>
           )}
 
           {activeTab === "prescriptions" && (
@@ -894,6 +1039,60 @@ export default function AlliancePharmacyAdminPage() {
   )
 }
 
+function MiniStat({ label, value }) {
+  return (
+    <div className="rounded-2xl bg-emerald-50 p-3">
+      <p className="text-[10px] font-black text-emerald-700">{label}</p>
+      <p className="text-[22px] font-black">{value}</p>
+    </div>
+  )
+}
+
+function EmptyBox({ text }) {
+  return (
+    <div className="rounded-[24px] border border-dashed border-emerald-200 bg-emerald-50/40 p-8 text-center">
+      <p className="font-black text-neutral-900">{text}</p>
+    </div>
+  )
+}
+
+function PillLabel({ text, green = false }) {
+  return (
+    <span className={`rounded-full px-3 py-1 text-[10px] font-black ${green ? "bg-emerald-50 text-emerald-700" : "bg-neutral-100 text-neutral-700"}`}>
+      {text}
+    </span>
+  )
+}
+
+function InfoBox({ icon: Icon, title, text, blue = false, large = false }) {
+  return (
+    <div className={`mt-4 rounded-[20px] border p-4 ${blue ? "border-blue-100 bg-blue-50" : "border-emerald-100 bg-emerald-50"}`}>
+      <div className="flex items-start gap-3">
+        <Icon className={`mt-1 h-5 w-5 ${blue ? "text-blue-700" : "text-emerald-700"}`} />
+        <div>
+          <p className={`text-[11px] font-black ${blue ? "text-blue-700" : "text-emerald-700"}`}>{title}</p>
+          <p className={`mt-1 font-black text-neutral-900 ${large ? "text-[24px] tracking-[0.12em]" : "text-[13px]"}`}>
+            {text}
+          </p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function MoneyBox({ label, value, strong = false }) {
+  return (
+    <div className="rounded-[18px] bg-emerald-50 px-4 py-3">
+      <p className="text-[10px] font-black uppercase tracking-[0.12em] text-emerald-700">
+        {label}
+      </p>
+      <p className={`mt-1 ${strong ? "text-[18px] font-black text-emerald-900" : "text-[14px] font-black text-neutral-900"}`}>
+        {money(value)}
+      </p>
+    </div>
+  )
+}
+
 function ListPanel({ title, empty, items, action }) {
   return (
     <div className="rounded-[32px] bg-white p-5 shadow-[0_14px_35px_rgba(4,120,87,0.08)]">
@@ -901,9 +1100,7 @@ function ListPanel({ title, empty, items, action }) {
 
       <div className="mt-4 space-y-3">
         {items.length === 0 ? (
-          <div className="rounded-[24px] border border-dashed border-emerald-200 bg-emerald-50/40 p-8 text-center">
-            <p className="font-black text-neutral-900">{empty}</p>
-          </div>
+          <EmptyBox text={empty} />
         ) : (
           items.map((item) => (
             <div key={item.id} className="rounded-[24px] border border-neutral-200 p-4">
