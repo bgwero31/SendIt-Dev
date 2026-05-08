@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
 import { ref, onValue } from "firebase/database"
 
@@ -16,11 +16,8 @@ export default function Tasks() {
   const [search, setSearch] = useState("")
   const [city, setCity] = useState(null)
   const [role, setRole] = useState(null)
-
-  // ✅ ADDED: task count for navbar badge
   const [taskCount, setTaskCount] = useState(0)
 
-  /* ================= AUTH + USER PROFILE ================= */
   useEffect(() => {
     let offUser = null
 
@@ -41,13 +38,12 @@ export default function Tasks() {
         }
 
         setRole("runner")
-
-        // reset before loading tasks
         setLoading(true)
 
         if (!data.city) {
           setCity(null)
           setTasks([])
+          setTaskCount(0)
           setLoading(false)
           return
         }
@@ -62,7 +58,6 @@ export default function Tasks() {
     }
   }, [router])
 
-  /* ================= TASK LISTENER (RUNNER FEED) ================= */
   useEffect(() => {
     if (!city || role !== "runner") return
 
@@ -72,96 +67,154 @@ export default function Tasks() {
       const data = snap.val() || {}
 
       const list = Object.entries(data)
-        .map(([id, task]) => ({
-          id,
-          ...task,
-          city
-        }))
+        .map(([id, task]) => {
+          const isPharmacy = task.type === "pharmacy_delivery"
+
+          return {
+            id,
+            ...task,
+            city,
+
+            // ✅ Makes pharmacy jobs readable inside your normal TaskCard
+            title: isPharmacy
+              ? `Pharmacy delivery from ${task.pickupName || "Alliance Pharmacy"}`
+              : task.title || "SendIt task",
+
+            description: isPharmacy
+              ? `Deliver to ${task.customerName || "customer"} • ${task.dropoffAddress || "No address"}`
+              : task.description || task.note || "",
+
+            pickup: task.pickupAddress || task.pickupName || task.pickup || "",
+            dropoff: task.dropoffAddress || task.dropoff || "",
+
+            // ✅ Your TaskCard may use price/amount/fare depending on old code
+            price: task.runnerFee || task.price || task.deliveryFee || 0,
+            amount: task.runnerFee || task.amount || task.price || task.deliveryFee || 0,
+            fare: task.runnerFee || task.fare || task.price || task.deliveryFee || 0,
+
+            // ✅ Special data for pharmacy pickup page
+            isPharmacyDelivery: isPharmacy,
+            pharmacyOrderId: task.pharmacyOrderId || "",
+            pickupCodeRequired: isPharmacy
+          }
+        })
         .filter(task =>
           task.status === "waiting_for_runner" ||
           task.status === "bidding"
         )
-        .sort((a, b) => b.createdAt - a.createdAt)
+        .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0))
 
       setTasks(list)
-
-      // ✅ ADDED: update navbar badge count
       setTaskCount(list.length)
-
       setLoading(false)
     })
 
     return () => offTasks()
   }, [city, role])
 
-  /* ================= SEARCH ================= */
-  const filtered = tasks.filter(task =>
-    task.title?.toLowerCase().includes(search.toLowerCase())
-  )
+  const filtered = useMemo(() => {
+    const q = search.toLowerCase().trim()
 
-  /* ================= UI ================= */
-return (
-  <main className="relative min-h-screen pb-32 overflow-hidden bg-gradient-to-br from-indigo-50 via-white to-purple-50">
+    if (!q) return tasks
 
-    {/* animated background glow */}
-    <div className="absolute -top-40 -left-40 w-[500px] h-[500px] bg-indigo-300/30 rounded-full blur-3xl bg-animate-slow"></div>
+    return tasks.filter(task => {
+      const text = `
+        ${task.title || ""}
+        ${task.description || ""}
+        ${task.pickup || ""}
+        ${task.dropoff || ""}
+        ${task.customerName || ""}
+        ${task.customerPhone || ""}
+        ${task.type || ""}
+      `.toLowerCase()
 
-    <div className="absolute -bottom-40 -right-40 w-[500px] h-[500px] bg-purple-300/30 rounded-full blur-3xl bg-animate-slow"></div>
+      return text.includes(q)
+    })
+  }, [tasks, search])
 
-    <div className="absolute top-1/3 left-1/3 w-[400px] h-[400px] bg-pink-200/30 rounded-full blur-3xl bg-animate-slow"></div>
+  return (
+    <main className="relative min-h-screen overflow-hidden bg-gradient-to-br from-emerald-50 via-white to-green-50 pb-32">
+      <div className="absolute -top-40 -left-40 h-[500px] w-[500px] rounded-full bg-emerald-300/25 blur-3xl bg-animate-slow" />
+      <div className="absolute -bottom-40 -right-40 h-[500px] w-[500px] rounded-full bg-green-300/20 blur-3xl bg-animate-slow" />
+      <div className="absolute left-1/3 top-1/3 h-[400px] w-[400px] rounded-full bg-lime-200/20 blur-3xl bg-animate-slow" />
 
-    <div className="relative z-10">
+      <div className="relative z-10">
+        <div className="px-6 pt-8">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <h1 className="text-2xl font-black tracking-[-0.04em] text-emerald-800">
+                Available Tasks
+              </h1>
+              <p className="mt-1 text-[12px] font-semibold text-neutral-500">
+                {city ? `${city} runner feed` : "Runner feed"}
+              </p>
+            </div>
 
-      {/* Header */}
-      <div className="px-6 pt-8 flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-indigo-700">
-          Available Tasks
-        </h1>
+            <span className="rounded-full bg-gradient-to-r from-emerald-700 to-green-600 px-4 py-2 text-sm font-black text-white shadow-md">
+              {filtered.length}
+            </span>
+          </div>
+        </div>
 
-        <span className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-3 py-1 rounded-full text-sm font-semibold shadow-md">
-          {filtered.length}
-        </span>
-      </div>
-
-      {/* Search */}
-      <div className="px-6 mt-4">
-        <input
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          placeholder="Search errands…"
-          className="w-full p-3 border border-white/40 bg-white/40 backdrop-blur-md rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm"
-        />
-      </div>
-
-      {/* Task list */}
-      <div className="px-6 mt-6 space-y-5">
-
-        {loading && (
-          <p className="text-center text-gray-500">
-            Loading tasks…
-          </p>
-        )}
-
-        {!loading && filtered.length === 0 && (
-          <p className="text-center text-gray-500">
-            No available tasks right now
-          </p>
-        )}
-
-        {filtered.map(task => (
-          <TaskCard
-            key={task.id}
-            {...task}
+        <div className="px-6 mt-4">
+          <input
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Search errands, pharmacy deliveries, customer or address…"
+            className="w-full rounded-xl border border-emerald-100 bg-white/70 p-3 text-[13px] font-semibold outline-none shadow-sm backdrop-blur-md focus:ring-2 focus:ring-emerald-500"
           />
-        ))}
+        </div>
 
+        <div className="px-6 mt-6 space-y-5">
+          {loading && (
+            <p className="text-center text-gray-500">
+              Loading tasks…
+            </p>
+          )}
+
+          {!loading && !city && (
+            <div className="rounded-2xl border border-amber-100 bg-amber-50 p-5 text-center">
+              <p className="font-bold text-amber-800">
+                Your runner city is not set.
+              </p>
+              <p className="mt-1 text-sm text-amber-700">
+                Add city to your user profile first.
+              </p>
+            </div>
+          )}
+
+          {!loading && city && filtered.length === 0 && (
+            <p className="text-center text-gray-500">
+              No available tasks right now
+            </p>
+          )}
+
+          {filtered.map(task => (
+            <div key={task.id} className="relative">
+              {task.isPharmacyDelivery && (
+                <div className="mb-2 inline-flex rounded-full bg-emerald-700 px-3 py-1 text-[10px] font-black text-white shadow-sm">
+                  ALLIANCE PHARMACY DELIVERY
+                </div>
+              )}
+
+              <TaskCard {...task} />
+
+              {task.isPharmacyDelivery && task.pharmacyOrderId && (
+                <button
+                  onClick={() =>
+                    router.push(`/runner/pharmacy-pickup/${task.pharmacyOrderId}`)
+                  }
+                  className="mt-3 w-full rounded-full bg-emerald-700 px-5 py-3 text-[13px] font-black text-white shadow-lg"
+                >
+                  Confirm pharmacy pickup code
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
       </div>
 
-    </div>
-
-    {/* ✅ UPDATED: pass task count to navbar */}
-    <Navbar taskCount={taskCount} />
-
-  </main>
-)
-            }
+      <Navbar taskCount={taskCount} />
+    </main>
+  )
+}
