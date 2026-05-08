@@ -34,6 +34,8 @@ function getDistance(lat1, lon1, lat2, lon2){
 export default function TaskCard({
   id,
   title,
+  type,
+  description,
   offerPrice,
   finalPrice,
   status,
@@ -47,7 +49,16 @@ export default function TaskCard({
   city,
   createdAt,
   pickupLat,
-  pickupLng
+  pickupLng,
+
+  // ✅ ADDED FOR PHARMACY DELIVERY
+  pickup,
+  dropoff,
+  isPharmacyDelivery,
+  pharmacyOrderId,
+  pickupCodeRequired,
+  customerName,
+  customerPhone
 }) {
 
   const user = auth.currentUser
@@ -57,7 +68,7 @@ export default function TaskCard({
   const isOwner = uid === ownerId
   const isBiddingRunner = uid === biddingRunnerId
   const [busy,setBusy] = useState(false)
-  const [bidAmount,setBidAmount] = useState(offerPrice || 0)
+  const [bidAmount,setBidAmount] = useState(offerPrice || finalPrice || 0)
   const [bids,setBids] = useState([])
 
   const taskRef = ref(db, `tasks/${city}/${id}`)
@@ -200,13 +211,28 @@ const acceptTask = async () => {
       city,
       ownerId,
       runnerId: uid,
-      ownerName: "Sender",
+      ownerName: isPharmacyDelivery ? "Alliance Pharmacy" : "Sender",
       runnerName: user.displayName || user.email || "Runner",
-      members:{ [ownerId]: true, [uid]: true },
+      members:{ [ownerId || "pharmacy"]: true, [uid]: true },
       createdAt: Date.now(),
       lastMessage:"",
-      lastAt: Date.now()
+      lastAt: Date.now(),
+      type: isPharmacyDelivery ? "pharmacy_delivery" : "task",
+      pharmacyOrderId: pharmacyOrderId || ""
     })
+
+    // ✅ UPDATE PHARMACY ORDER ALSO
+    if (isPharmacyDelivery && pharmacyOrderId) {
+      await update(ref(db, `pharmacyOrders/alliance-pharmacy/${pharmacyOrderId}`), {
+        status: "runner_assigned",
+        runnerId: uid,
+        runnerName: user.displayName || user.email || "Runner",
+        runnerPhone: myPhone,
+        runnerTaskId: id,
+        "timeline/runnerAssignedAt": Date.now(),
+        updatedAt: Date.now()
+      })
+    }
 
     // 🔔 notify owner
     try {
@@ -233,7 +259,12 @@ const acceptTask = async () => {
       console.log("Notify accept error", e)
     }
 
-    window.location.href = `/chat/${id}`
+    // ✅ PHARMACY TASK GOES TO PICKUP CODE PAGE FIRST
+    if (isPharmacyDelivery && pharmacyOrderId) {
+      window.location.href = `/runner/pharmacy-pickup/${pharmacyOrderId}`
+    } else {
+      window.location.href = `/chat/${id}`
+    }
 
   } catch(err) {
     console.error(err)
@@ -319,12 +350,18 @@ const acceptBid = async (bid) => {
     const unsub = onValue(taskRef,snap=>{
 
       const task = snap.val()
-if(
-  task?.status === "accepted" &&
-  (task.runnerId === uid || task.ownerId === uid)
-){
-  window.location.href = chatUrl
-}
+
+      if(
+        task?.status === "accepted" &&
+        (task.runnerId === uid || task.ownerId === uid)
+      ){
+        // ✅ DO NOT AUTO-REDIRECT PHARMACY TASK BEFORE PICKUP CODE
+        if (task.type === "pharmacy_delivery" && task.pharmacyOrderId) {
+          return
+        }
+
+        window.location.href = chatUrl
+      }
 
     })
 
@@ -337,12 +374,18 @@ if(
 
 return (
 
-  <div className="relative backdrop-blur-xl bg-white/20 border border-white/30 rounded-3xl shadow-xl p-5 space-y-4 overflow-hidden">
+  <div className={`relative backdrop-blur-xl border rounded-3xl shadow-xl p-5 space-y-4 overflow-hidden ${
+    isPharmacyDelivery
+      ? "bg-emerald-50/70 border-emerald-200"
+      : "bg-white/20 border-white/30"
+  }`}>
 
     {/* faded SendIt background */}
     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-      <span className="text-6xl font-bold tracking-widest text-indigo-300/20">
-        SendIt
+      <span className={`text-6xl font-bold tracking-widest ${
+        isPharmacyDelivery ? "text-emerald-300/20" : "text-indigo-300/20"
+      }`}>
+        {isPharmacyDelivery ? "Alliance" : "SendIt"}
       </span>
     </div>
 
@@ -354,25 +397,63 @@ return (
         <div>
           <p className="font-semibold text-lg break-words">{title}</p>
 
+          {isPharmacyDelivery && (
+            <div className="mt-2 inline-flex items-center gap-2 rounded-full bg-emerald-100 px-3 py-1 text-[10px] font-black text-emerald-800 border border-emerald-200">
+              💊 ALLIANCE PHARMACY DELIVERY
+            </div>
+          )}
 
-{distance !== null && (
-  <p className="text-xs text-indigo-600 font-semibold">
-    {distance.toFixed(2)} km away
-  </p>
-)}
+          {description && (
+            <p className="mt-2 text-xs text-gray-600">
+              {description}
+            </p>
+          )}
 
-          
-          <p className="text-xs text-gray-500">
-            Posted {new Date(createdAt).toLocaleString()}
+          {distance !== null && (
+            <p className={`text-xs font-semibold mt-2 ${
+              isPharmacyDelivery ? "text-emerald-700" : "text-indigo-600"
+            }`}>
+              {distance.toFixed(2)} km away
+            </p>
+          )}
+
+          <p className="text-xs text-gray-500 mt-1">
+            Posted {createdAt ? new Date(createdAt).toLocaleString() : "Just now"}
           </p>
 
           <p className="text-xs text-gray-600 mt-1">
-            Phone: {ownerPhone}
+            Phone: {ownerPhone || customerPhone || "Not set"}
           </p>
+
+          {pickup && (
+            <p className="text-xs text-gray-700 mt-2">
+              📦 Pickup: {pickup}
+            </p>
+          )}
+
+          {dropoff && (
+            <p className="text-xs text-gray-700 mt-1">
+              📍 Dropoff: {dropoff}
+            </p>
+          )}
+
+          {customerName && (
+            <p className="text-xs text-gray-700 mt-1">
+              👤 Customer: {customerName}
+            </p>
+          )}
+
+          {customerPhone && (
+            <p className="text-xs text-gray-700 mt-1">
+              📞 Customer: {customerPhone}
+            </p>
+          )}
         </div>
 
-        <span className="text-indigo-600 font-bold text-lg">
-          ${finalPrice ?? offerPrice}
+        <span className={`font-bold text-lg ${
+          isPharmacyDelivery ? "text-emerald-700" : "text-indigo-600"
+        }`}>
+          ${finalPrice ?? offerPrice ?? 0}
         </span>
 
       </div>
@@ -401,31 +482,50 @@ return (
 
         <div className="space-y-3">
 
-          <input
-            type="number"
-            min="1"
-            value={bidAmount}
-            onChange={e=>setBidAmount(e.target.value)}
-            className="w-full border border-white/40 bg-white/40 backdrop-blur-md rounded-xl p-3"
-            placeholder="Your price"
-          />
+          {!isPharmacyDelivery && (
+            <input
+              type="number"
+              min="1"
+              value={bidAmount}
+              onChange={e=>setBidAmount(e.target.value)}
+              className="w-full border border-white/40 bg-white/40 backdrop-blur-md rounded-xl p-3"
+              placeholder="Your price"
+            />
+          )}
+
+          {isPharmacyDelivery && (
+            <div className="rounded-xl border border-emerald-200 bg-white/70 p-3">
+              <p className="text-xs font-bold text-emerald-800">
+                Fixed pharmacy runner fee
+              </p>
+              <p className="mt-1 text-lg font-black text-emerald-900">
+                ${finalPrice ?? offerPrice ?? 3}
+              </p>
+            </div>
+          )}
 
           <div className="flex gap-3">
 
-            <button
-              onClick={placeBid}
-              disabled={busy}
-              className="flex-1 bg-gradient-to-r from-indigo-500 to-purple-600 text-white py-3 rounded-xl font-semibold shadow-md"
-            >
-              Place Bid
-            </button>
+            {!isPharmacyDelivery && (
+              <button
+                onClick={placeBid}
+                disabled={busy}
+                className="flex-1 bg-gradient-to-r from-indigo-500 to-purple-600 text-white py-3 rounded-xl font-semibold shadow-md"
+              >
+                Place Bid
+              </button>
+            )}
 
             <button
               onClick={acceptTask}
               disabled={busy}
-              className="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 text-white py-3 rounded-xl font-semibold shadow-md"
+              className={`flex-1 text-white py-3 rounded-xl font-semibold shadow-md ${
+                isPharmacyDelivery
+                  ? "bg-gradient-to-r from-emerald-600 to-green-600"
+                  : "bg-gradient-to-r from-green-500 to-emerald-600"
+              }`}
             >
-              Accept
+              {isPharmacyDelivery ? "Accept Pharmacy Job" : "Accept"}
             </button>
 
           </div>
@@ -467,18 +567,44 @@ return (
       ))}
 
 
-      {status === "accepted" && (
+      {isPharmacyDelivery &&
+       status === "accepted" &&
+       pickupCodeRequired &&
+       pharmacyOrderId && (
+
+        <button
+          onClick={() =>
+            window.location.href =
+            `/runner/pharmacy-pickup/${pharmacyOrderId}`
+          }
+          className="w-full bg-emerald-700 text-white py-3 rounded-xl font-semibold"
+        >
+          Confirm Pharmacy Pickup
+        </button>
+      )}
+
+
+      {status === "accepted" && !isPharmacyDelivery && (
         <button
           onClick={()=>window.location.href = chatUrl}
           className="w-full bg-indigo-700 text-white py-3 rounded-xl font-semibold"
         >
-              Open Chat  
-    </button>  
-  )}  
+          Open Chat
+        </button>
+      )}
 
-</div>  
+      {isPharmacyDelivery && status === "accepted" && (
+        <button
+          onClick={()=>window.location.href = chatUrl}
+          className="w-full border border-emerald-200 bg-white text-emerald-800 py-3 rounded-xl font-semibold"
+        >
+          Open Delivery Chat
+        </button>
+      )}
 
-  </div>     
+    </div>
+
+  </div>
 
 )
 }
